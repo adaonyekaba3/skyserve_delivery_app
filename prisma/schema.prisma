@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+  RESTAURANT_OWNER
+  OPERATIONS
+}
+
+enum RestaurantStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  PICKED_UP
+  IN_FLIGHT
+  DELIVERED
+  CANCELLED
+}
+
+enum DroneStatus {
+  IDLE
+  CHARGING
+  ASSIGNED
+  IN_FLIGHT
+  MAINTENANCE
+  OFFLINE
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  PICKED_UP
+  IN_FLIGHT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum StatusEntityType {
+  ORDER
+  DELIVERY
+  DRONE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders       Order[]
+  ownedRestaurants Restaurant[] @relation("RestaurantOwner")
+  statusEvents  StatusEvent[] @relation("StatusEventActor")
+}
+
+model Restaurant {
+  id          String           @id @default(uuid())
+  ownerId     String?
+  name        String
+  description String?
+  address     String
+  latitude    Float
+  longitude   Float
+  status      RestaurantStatus @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  orders      Order[]
+  owner       User?            @relation("RestaurantOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId])
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  customerId     String
+  restaurantId   String
+  totalAmount    Decimal     @db.Decimal(10, 2)
+  deliveryAddress String
+  notes          String?
+  status         OrderStatus @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  customer       User        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  restaurant     Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  delivery       Delivery?
+
+  @@index([customerId])
+  @@index([restaurantId])
+  @@index([status])
+}
+
+model Drone {
+  id           String       @id @default(uuid())
+  serialNumber String       @unique
+  name         String
+  batteryLevel Int
+  latitude     Float
+  longitude    Float
+  status       DroneStatus  @default(IDLE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deliveries   Delivery[]
+
+  @@index([status])
+}
+
+model Delivery {
+  id                String         @id @default(uuid())
+  orderId           String         @unique
+  droneId           String
+  status            DeliveryStatus @default(ASSIGNED)
+  assignedAt        DateTime       @default(now())
+  pickedUpAt        DateTime?
+  inFlightAt        DateTime?
+  deliveredAt       DateTime?
+  currentLatitude   Float?
+  currentLongitude  Float?
+  etaMinutes        Int?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  drone             Drone          @relation(fields: [droneId], references: [id], onDelete: Restrict)
+  telemetryPoints   DeliveryTelemetry[]
+
+  @@index([droneId])
+  @@index([status])
+}
+
+model StatusEvent {
+  id          String           @id @default(uuid())
+  entityType  StatusEntityType
+  entityId    String
+  fromStatus  String?
+  toStatus    String
+  reason      String?
+  metadata    Json?
+  actorUserId String?
+  actor       User?            @relation("StatusEventActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId])
+}
+
+model DeliveryTelemetry {
+  id         String   @id @default(uuid())
+  deliveryId String
+  latitude   Float
+  longitude  Float
+  etaMinutes Int?
+  createdAt  DateTime @default(now())
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId, createdAt])
+}

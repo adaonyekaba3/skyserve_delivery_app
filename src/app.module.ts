@@ -1,0 +1,31 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { validateEnv } from './config/env.validation';
+import { DeliveriesModule } from './deliveries/deliveries.module';
+import { DronesModule } from './drones/drones.module';
+import { HealthModule } from './health/health.module';
+import { OrdersModule } from './orders/orders.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { RestaurantsModule } from './restaurants/restaurants.module';
+import { UsersModule } from './users/users.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      envFilePath: '.env',
+      validate: validateEnv,
+    }),
+    PrismaModule,
+    AuthModule,
+    HealthModule,
+    UsersModule,
+    RestaurantsModule,
+    OrdersModule,
+    DronesModule,
+    DeliveriesModule,
+  ],
+})
+export class AppModule {}
