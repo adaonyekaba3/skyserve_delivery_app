@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { validateEnv } from './config/env.validation';
-import { DeliveriesModule } from './deliveries/deliveries.module';
-import { DronesModule } from './drones/drones.module';
-import { HealthModule } from './health/health.module';
-import { OrdersModule } from './orders/orders.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { RestaurantsModule } from './restaurants/restaurants.module';
-import { UsersModule } from './users/users.module';
+import { IdentityModule } from './modules/identity/identity.module';
+import { UsersModule } from './modules/users/users.module';
+import { RestaurantsModule } from './modules/restaurants/restaurants.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { DispatchModule } from './modules/dispatch/dispatch.module';
+import { FleetModule } from './modules/fleet/fleet.module';
+import { DeliveriesModule } from './modules/deliveries/deliveries.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { OperatorModule } from './modules/operator/operator.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { DatabaseModule } from './shared/database/database.module';
 
 @Module({
   imports: [
@@ -16,16 +19,19 @@ import { UsersModule } from './users/users.module';
       isGlobal: true,
       cache: true,
       envFilePath: '.env',
-      validate: validateEnv,
     }),
-    PrismaModule,
-    AuthModule,
-    HealthModule,
+    DatabaseModule,
+    IdentityModule,
     UsersModule,
     RestaurantsModule,
+    CatalogModule,
     OrdersModule,
-    DronesModule,
+    DispatchModule,
+    FleetModule,
     DeliveriesModule,
+    PaymentsModule,
+    OperatorModule,
+    AuditModule,
   ],
 })
 export class AppModule {}

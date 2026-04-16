@@ -26,7 +26,7 @@
   },
   "include": [
     "src/**/*",
-    "prisma/**/*"
+    "drizzle/**/*"
   ],
   "exclude": [
     "node_modules",

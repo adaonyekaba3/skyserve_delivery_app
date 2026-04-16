@@ -1,15 +1,9 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-  });
-
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT', 3000);
+  const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
   app.enableVersioning({
@@ -19,14 +13,12 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      forbidNonWhitelisted: true,
     }),
   );
 
+  const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
 }
 
