@@ -47,6 +47,13 @@ export const paymentStatusEnum = pgEnum('payment_status', [
   'REFUNDED',
 ]);
 
+export const droneStatusEnum = pgEnum('drone_status', [
+  'IDLE',
+  'DELIVERING',
+  'CHARGING',
+  'MAINTENANCE',
+]);
+
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   clerkUserId: text('clerk_user_id').notNull(),
@@ -81,12 +88,55 @@ export const orders = pgTable('orders', {
   status: orderStatusEnum('status').notNull().default('PENDING'),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   deliveryAddress: text('delivery_address').notNull(),
+  deliveryLatitude: decimal('delivery_latitude', { precision: 10, scale: 7 }),
+  deliveryLongitude: decimal('delivery_longitude', { precision: 10, scale: 7 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => ({
   customerIdx: index('orders_customer_id_idx').on(t.customerId),
   restaurantIdx: index('orders_restaurant_id_idx').on(t.restaurantId),
   statusIdx: index('orders_status_idx').on(t.status),
+}));
+
+export const menuItems = pgTable('menu_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id),
+  name: text('name').notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  isAvailable: boolean('is_available').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  restaurantIdx: index('menu_items_restaurant_id_idx').on(t.restaurantId),
+}));
+
+export const orderItems = pgTable('order_items', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orderId: uuid('order_id').notNull().references(() => orders.id),
+  menuItemId: uuid('menu_item_id').notNull().references(() => menuItems.id),
+  quantity: integer('quantity').notNull(),
+  unitPrice: decimal('unit_price', { precision: 10, scale: 2 }).notNull(),
+  nameSnapshot: text('name_snapshot').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  orderIdx: index('order_items_order_id_idx').on(t.orderId),
+}));
+
+export const drones = pgTable('drones', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  code: text('code').notNull(),
+  status: droneStatusEnum('status').notNull().default('IDLE'),
+  batteryPct: integer('battery_pct').notNull().default(100),
+  currentLatitude: decimal('current_latitude', { precision: 10, scale: 7 }),
+  currentLongitude: decimal('current_longitude', { precision: 10, scale: 7 }),
+  activeDeliveryId: uuid('active_delivery_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  codeIdx: uniqueIndex('drones_code_uidx').on(t.code),
+  statusIdx: index('drones_status_idx').on(t.status),
 }));
 
 export const deliveries = pgTable('deliveries', {

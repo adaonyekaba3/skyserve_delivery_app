@@ -1,4 +1,4 @@
-export type PaymentProviderName = 'PAYSTACK' | 'FLUTTERWAVE';
+export type PaymentProviderName = 'STRIPE' | 'PAYSTACK' | 'FLUTTERWAVE';
 
 export interface InitializePaymentInput {
   orderId: string;

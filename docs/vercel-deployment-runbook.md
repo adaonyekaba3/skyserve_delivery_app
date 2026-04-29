@@ -24,6 +24,10 @@ Required variables for `development`, `preview`, and `production`:
 - `PAYSTACK_WEBHOOK_SECRET` (pending real key)
 - `FLUTTERWAVE_SECRET_KEY` (pending real key)
 - `FLUTTERWAVE_WEBHOOK_SECRET_HASH` (pending real key)
+- `PUSHER_APP_ID` (required for realtime publish)
+- `PUSHER_KEY` (required for client subscriptions)
+- `PUSHER_SECRET` (required for server-side trigger + auth signing)
+- `PUSHER_CLUSTER` (required for app region)
 
 Provision and verify:
 

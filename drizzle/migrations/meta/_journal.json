@@ -8,6 +8,20 @@
       "when": 1776370495320,
       "tag": "0000_quiet_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777418416501,
+      "tag": "0001_violet_psylocke",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777428000000,
+      "tag": "0002_menu_item_image_url",
+      "breakpoints": true
     }
   ]
 }

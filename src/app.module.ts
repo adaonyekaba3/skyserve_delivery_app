@@ -11,7 +11,9 @@ import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { OperatorModule } from './modules/operator/operator.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { DronesModule } from './modules/drones/drones.module';
 import { DatabaseModule } from './shared/database/database.module';
+import { RealtimeModule } from './shared/realtime/realtime.module';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { DatabaseModule } from './shared/database/database.module';
       envFilePath: '.env',
     }),
     DatabaseModule,
+    RealtimeModule,
     IdentityModule,
     UsersModule,
     RestaurantsModule,
@@ -32,6 +35,7 @@ import { DatabaseModule } from './shared/database/database.module';
     PaymentsModule,
     OperatorModule,
     AuditModule,
+    DronesModule,
   ],
 })
 export class AppModule {}

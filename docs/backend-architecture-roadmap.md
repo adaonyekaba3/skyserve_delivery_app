@@ -6,5 +6,5 @@ This repository now uses a reset architecture strategy:
 - New backend uses NestJS modular monolith boundaries in `src/modules`.
 - Drizzle is the sole ORM and schema source in `drizzle/schema.ts`.
 - Clerk identity integration is the default authentication boundary.
-- Payment integrations are adapter-driven (`paystack`, `flutterwave`).
+- Payment integrations are adapter-driven (`stripe`, `paystack`, `flutterwave`).
 - Deployment targets Vercel with preview and production workflows.

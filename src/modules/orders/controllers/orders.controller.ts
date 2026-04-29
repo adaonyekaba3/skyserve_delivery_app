@@ -1,20 +1,59 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import { IsString, IsUUID } from 'class-validator';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { OrdersService } from '../application/orders.service';
 import { Roles } from 'src/modules/identity/guards/roles.decorator';
 import { Role } from 'src/shared/types/role.enum';
 import { CurrentUser } from 'src/modules/identity/guards/current-user.decorator';
 import { AuthenticatedUser } from 'src/shared/types/authenticated-user';
 
+class OrderLineDto {
+  @IsUUID()
+  menuItemId!: string;
+
+  @IsInt()
+  @Min(1)
+  quantity!: number;
+}
+
 class CreateOrderDto {
   @IsUUID()
   restaurantId!: string;
 
   @IsString()
-  totalAmount!: string;
-
-  @IsString()
   deliveryAddress!: string;
+
+  @IsOptional()
+  @IsString()
+  deliveryLatitude?: string;
+
+  @IsOptional()
+  @IsString()
+  deliveryLongitude?: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => OrderLineDto)
+  items!: OrderLineDto[];
 }
 
 @Controller({ path: 'orders', version: '1' })
@@ -25,10 +64,12 @@ export class OrdersController {
   @Post()
   create(@Body() dto: CreateOrderDto, @CurrentUser() user: AuthenticatedUser) {
     return this.ordersService.create({
-      customerId: user.sub,
+      customerId: user.dbUserId,
       restaurantId: dto.restaurantId,
-      totalAmount: dto.totalAmount,
       deliveryAddress: dto.deliveryAddress,
+      deliveryLatitude: dto.deliveryLatitude,
+      deliveryLongitude: dto.deliveryLongitude,
+      items: dto.items,
     });
   }
 
@@ -38,15 +79,54 @@ export class OrdersController {
     return this.ordersService.listRecent();
   }
 
-  @Get(':id')
-  findById(@Param('id') id: string) {
-    return this.ordersService.findById(id);
+  @Roles(Role.CUSTOMER, Role.ADMIN)
+  @Get('mine')
+  listMine(@CurrentUser() user: AuthenticatedUser) {
+    return this.ordersService.listMine(user.dbUserId);
   }
 
-  @Roles(Role.ADMIN, Role.OPERATIONS)
+  @Roles(Role.RESTAURANT_OWNER, Role.ADMIN, Role.OPERATIONS)
+  @Get('by-restaurant/:restaurantId')
+  listByRestaurant(
+    @Param('restaurantId', new ParseUUIDPipe()) restaurantId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    if (
+      user.role === Role.RESTAURANT_OWNER &&
+      !user.restaurantIds.includes(restaurantId)
+    ) {
+      throw new ForbiddenException('You do not own this restaurant');
+    }
+    return this.ordersService.listByRestaurant(restaurantId);
+  }
+
+  @Get(':id')
+  findById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ordersService.findWithItems(id).then((order) => {
+      if (!order) return null;
+      if (
+        user.role === Role.CUSTOMER &&
+        order.customerId !== user.dbUserId
+      ) {
+        throw new ForbiddenException('You do not own this order');
+      }
+      if (
+        user.role === Role.RESTAURANT_OWNER &&
+        !user.restaurantIds.includes(order.restaurantId)
+      ) {
+        throw new ForbiddenException('You do not own this restaurant');
+      }
+      return order;
+    });
+  }
+
+  @Roles(Role.ADMIN, Role.OPERATIONS, Role.RESTAURANT_OWNER)
   @Patch(':id/status/:status')
   updateStatus(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Param('status')
     status:
       | 'PENDING'
@@ -56,7 +136,8 @@ export class OrdersController {
       | 'IN_FLIGHT'
       | 'DELIVERED'
       | 'CANCELLED',
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.ordersService.updateStatus(id, status);
+    return this.ordersService.updateStatus(id, status, user.dbUserId);
   }
 }

@@ -10,3 +10,4 @@ generated
 .idea
 ._*
 .env*.local
+.expo/

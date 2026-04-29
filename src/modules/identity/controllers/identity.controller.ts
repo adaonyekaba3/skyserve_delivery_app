@@ -1,14 +1,16 @@
-import { Body, Controller, Get, Headers, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
 import { Public } from '../guards/public.decorator';
+import { CurrentUser } from '../guards/current-user.decorator';
 import { IdentitySyncService } from '../application/identity-sync.service';
+import { AuthenticatedUser } from 'src/shared/types/authenticated-user';
 
 @Controller({ path: 'identity', version: '1' })
 export class IdentityController {
   constructor(private readonly identitySyncService: IdentitySyncService) {}
 
   @Get('me')
-  me(@Req() req: { user?: unknown }) {
-    return { user: req.user ?? null };
+  me(@CurrentUser() user: AuthenticatedUser) {
+    return { user };
   }
 
   @Public()

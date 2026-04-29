@@ -9,6 +9,8 @@ import {
 } from '../domain/payment-provider.port';
 import { PaystackProvider } from '../adapters/paystack/paystack.provider';
 import { FlutterwaveProvider } from '../adapters/flutterwave/flutterwave.provider';
+import { StripeProvider } from '../adapters/stripe/stripe.provider';
+import { OrdersService } from 'src/modules/orders/application/orders.service';
 
 @Injectable()
 export class PaymentsService {
@@ -17,10 +19,13 @@ export class PaymentsService {
   constructor(
     private readonly drizzleService: DrizzleService,
     private readonly outboxService: OutboxService,
+    private readonly ordersService: OrdersService,
+    stripeProvider: StripeProvider,
     paystackProvider: PaystackProvider,
     flutterwaveProvider: FlutterwaveProvider,
   ) {
     this.providerMap = {
+      STRIPE: stripeProvider,
       PAYSTACK: paystackProvider,
       FLUTTERWAVE: flutterwaveProvider,
     };
@@ -82,6 +87,9 @@ export class PaymentsService {
     providerRef: string;
   }) {
     const provider = this.providerMap[input.provider];
+    if (!provider) {
+      throw new BadRequestException('Unsupported payment provider');
+    }
     if (!provider.verifyWebhookSignature(input.payloadRaw, input.signature)) {
       throw new BadRequestException('Invalid webhook signature');
     }
@@ -93,6 +101,14 @@ export class PaymentsService {
       .set({ status: verified.status })
       .where(eq(payments.providerRef, input.providerRef))
       .returning();
+
+    if (updated && (verified.status === 'AUTHORIZED' || verified.status === 'CAPTURED')) {
+      try {
+        await this.ordersService.updateStatus(updated.orderId, 'ACCEPTED');
+      } catch {
+        // Order may already be advanced by an operator; ignore transition conflicts.
+      }
+    }
 
     await this.outboxService.enqueue('payment.status.changed', {
       provider: input.provider,

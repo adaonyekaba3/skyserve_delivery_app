@@ -17,7 +17,7 @@ class InitializePaymentDto {
   @IsString()
   callbackUrl!: string;
 
-  @IsEnum({ PAYSTACK: 'PAYSTACK', FLUTTERWAVE: 'FLUTTERWAVE' })
+  @IsEnum({ STRIPE: 'STRIPE', PAYSTACK: 'PAYSTACK', FLUTTERWAVE: 'FLUTTERWAVE' })
   provider!: PaymentProviderName;
 
   @IsString()
