@@ -37,7 +37,24 @@ export type IconName =
   | 'alert-triangle'
   | 'smartphone'
   | 'heart'
-  | 'trash-2';
+  | 'trash-2'
+  | 'package'
+  | 'send'
+  | 'share-2'
+  | 'copy'
+  | 'truck'
+  | 'gift'
+  | 'briefcase'
+  | 'feather'
+  | 'image'
+  | 'upload'
+  | 'download'
+  | 'info'
+  | 'lock'
+  | 'eye'
+  | 'eye-off'
+  | 'edit-3'
+  | 'zap';
 
 interface IconProps {
   name: IconName;

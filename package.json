@@ -13,6 +13,8 @@
     "npm": "10.8.2"
   },
   "scripts": {
+    "predev": "npm run db:migrate && npm run seed:dev || true",
+    "prestart:dev": "npm run db:migrate && npm run seed:dev || true",
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -22,6 +24,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "node scripts/seed.mjs",
+    "seed:dev": "node scripts/seed.mjs",
     "sim:drones": "node scripts/drones-simulator.mjs",
     "smoke": "node scripts/smoke-test.mjs",
     "verify:local": "npm run build && npm run test",

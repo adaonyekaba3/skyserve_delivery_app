@@ -12,11 +12,12 @@ export default function NotAuthorizedPage() {
           Not authorized
         </h1>
         <p className="mt-2 text-sm text-muted">
-          The admin dashboard is restricted to operators with the{' '}
+          Queen Operations is restricted to operators with the{' '}
           <span className="font-semibold text-text">ADMIN</span> role.
         </p>
         <p className="mt-1 text-xs text-subtle">
-          If you believe this is a mistake, contact ops@skyserve.app.
+          If you believe this is a mistake, contact your Queen Operations
+          administrator.
         </p>
         <div className="mt-6 space-y-2">
           <SignOutButton>

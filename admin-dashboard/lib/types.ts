@@ -10,7 +10,9 @@ export type OrderStatus =
 export interface Order {
   id: string;
   customerId: string;
-  restaurantId: string;
+  restaurantId: string | null;
+  orderType?: 'food' | 'package_delivery';
+  deliveryPriority?: 'standard' | 'priority';
   status: OrderStatus;
   totalAmount: string;
   deliveryAddress: string;
@@ -125,4 +127,55 @@ export interface Cart {
   restaurantId: string | null;
   items: CartLine[];
   totalAmount: string;
+}
+
+export type OrderType = 'food' | 'package_delivery';
+export type DeliveryPriority = 'standard' | 'priority';
+export type PackageRecipientType = 'user' | 'vendor' | 'guest';
+export type PackageCategory =
+  | 'documents'
+  | 'food'
+  | 'parcel'
+  | 'gift'
+  | 'other';
+export type PackageWeightClass = 'light' | 'medium' | 'heavy';
+
+export interface Package {
+  id: string;
+  orderId: string;
+  senderId: string;
+  recipientPhone: string;
+  recipientId: string | null;
+  recipientType: PackageRecipientType;
+  recipientName: string | null;
+  category: PackageCategory;
+  weightClass: PackageWeightClass;
+  isFragile: boolean;
+  description: string | null;
+  pickupAddress: string;
+  pickupLatitude: string | null;
+  pickupLongitude: string | null;
+  dropoffAddress: string;
+  dropoffLatitude: string | null;
+  dropoffLongitude: string | null;
+  trackingToken: string;
+  scheduledFor: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BankTransferStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+
+export interface BankTransfer {
+  id: string;
+  paymentId: string;
+  orderId: string;
+  proofUrl: string | null;
+  submittedAt: string | null;
+  verifiedAt: string | null;
+  verifiedBy: string | null;
+  status: BankTransferStatus;
+  adminNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

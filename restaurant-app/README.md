@@ -1,6 +1,6 @@
-# SkyServe Restaurant App (Expo)
+# Queen Vendor Console (Expo)
 
-Restaurant-side mobile app: receive new orders in real time and update their status.
+The vendor-side mobile app for **Queen by Atelier Élevé**: receive new orders in real time and update their status as the drone fleet handles dispatch.
 
 ## Setup
 

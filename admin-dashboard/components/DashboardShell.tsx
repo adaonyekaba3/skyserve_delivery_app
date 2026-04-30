@@ -4,18 +4,21 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import {
-  LayoutDashboard,
+  Activity,
+  Banknote,
   Inbox,
-  Plane,
+  LayoutDashboard,
   Map as MapIcon,
+  Plane,
+  Send,
   Store,
   TrendingUp,
   type LucideIcon,
-  Activity,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAdminBus } from '@/lib/useAdminBus';
 import { fetchAdminOverview } from '@/lib/api.client';
+import { BrandWordmark } from './BrandWordmark';
 
 interface NavItem {
   href: string;
@@ -26,6 +29,8 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: '/overview', label: 'Overview', icon: LayoutDashboard },
   { href: '/orders', label: 'Orders', icon: Inbox },
+  { href: '/packages', label: 'Packages', icon: Send },
+  { href: '/bank-transfers', label: 'Bank transfers', icon: Banknote },
   { href: '/vendors', label: 'Vendors', icon: Store },
   { href: '/fleet', label: 'Fleet', icon: Plane },
   { href: '/map', label: 'Live Map', icon: MapIcon },
@@ -65,18 +70,18 @@ export default function DashboardShell({
     <div className="min-h-screen bg-bg">
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <span className="text-lg font-bold text-accent">S</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-text">
-                Skyrunner Ops
-              </h1>
-              <p className="text-xs text-muted">
-                Realtime drone delivery control
-              </p>
-            </div>
+          <div className="flex items-center gap-4">
+            <BrandWordmark variant="compact" />
+            <span
+              className="hidden md:inline-block text-[10px] uppercase tracking-[0.2em] text-muted border-l border-border pl-4"
+              style={{ lineHeight: 1.4 }}
+            >
+              Operations
+              <br />
+              <span className="normal-case tracking-normal text-[11px]">
+                Realtime control
+              </span>
+            </span>
           </div>
           <div className="flex items-center gap-3">
             {typeof unprocessed === 'number' && unprocessed > 0 ? (

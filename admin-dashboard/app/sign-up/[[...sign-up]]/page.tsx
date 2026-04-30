@@ -1,16 +1,14 @@
 import { SignUp } from '@clerk/nextjs';
+import { BrandWordmark } from '../../../components/BrandWordmark';
 
 export default function SignUpPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-bg p-6">
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-          <span className="text-xl font-bold text-accent">S</span>
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">
-          SkyServe Admin
-        </h1>
-        <p className="mt-1 text-sm text-muted">Create your operator account</p>
+      <div className="mb-8 text-center flex flex-col items-center gap-4">
+        <BrandWordmark variant="splash" />
+        <p className="text-sm text-muted">
+          Create your Queen Operations account
+        </p>
       </div>
       <SignUp
         appearance={{

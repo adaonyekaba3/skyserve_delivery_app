@@ -63,6 +63,10 @@ export const users = pgTable(
     fullName: text('full_name').notNull(),
     role: roleEnum('role').notNull().default('CUSTOMER'),
     location: text('location'),
+    phoneNumber: text('phone_number'),
+    defaultAddress: text('default_address'),
+    defaultLatitude: decimal('default_latitude', { precision: 10, scale: 7 }),
+    defaultLongitude: decimal('default_longitude', { precision: 10, scale: 7 }),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
@@ -74,6 +78,7 @@ export const users = pgTable(
   (t) => ({
     clerkUserIdx: uniqueIndex('users_clerk_user_id_uidx').on(t.clerkUserId),
     emailIdx: uniqueIndex('users_email_uidx').on(t.email),
+    phoneIdx: index('users_phone_number_idx').on(t.phoneNumber),
   }),
 );
 
@@ -109,9 +114,9 @@ export const orders = pgTable(
     customerId: uuid('customer_id')
       .notNull()
       .references(() => users.id),
-    restaurantId: uuid('restaurant_id')
-      .notNull()
-      .references(() => restaurants.id),
+    restaurantId: uuid('restaurant_id').references(() => restaurants.id),
+    orderType: text('order_type').notNull().default('food'),
+    deliveryPriority: text('delivery_priority').notNull().default('standard'),
     status: orderStatusEnum('status').notNull().default('PENDING'),
     totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
     deliveryAddress: text('delivery_address').notNull(),
@@ -131,6 +136,7 @@ export const orders = pgTable(
     customerIdx: index('orders_customer_id_idx').on(t.customerId),
     restaurantIdx: index('orders_restaurant_id_idx').on(t.restaurantId),
     statusIdx: index('orders_status_idx').on(t.status),
+    orderTypeIdx: index('orders_order_type_idx').on(t.orderType),
   }),
 );
 
@@ -326,5 +332,80 @@ export const cartItems = pgTable(
       t.cartId,
       t.menuItemId,
     ),
+  }),
+);
+
+export const packages = pgTable(
+  'packages',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id),
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id),
+    recipientPhone: text('recipient_phone').notNull(),
+    recipientId: uuid('recipient_id').references(() => users.id),
+    recipientType: text('recipient_type').notNull().default('guest'),
+    recipientName: text('recipient_name'),
+    category: text('category').notNull().default('parcel'),
+    weightClass: text('weight_class').notNull().default('light'),
+    isFragile: boolean('is_fragile').notNull().default(false),
+    description: text('description'),
+    pickupAddress: text('pickup_address').notNull(),
+    pickupLatitude: decimal('pickup_latitude', { precision: 10, scale: 7 }),
+    pickupLongitude: decimal('pickup_longitude', { precision: 10, scale: 7 }),
+    dropoffAddress: text('dropoff_address').notNull(),
+    dropoffLatitude: decimal('dropoff_latitude', { precision: 10, scale: 7 }),
+    dropoffLongitude: decimal('dropoff_longitude', { precision: 10, scale: 7 }),
+    trackingToken: text('tracking_token').notNull(),
+    scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    orderIdx: uniqueIndex('packages_order_id_uidx').on(t.orderId),
+    senderIdx: index('packages_sender_id_idx').on(t.senderId),
+    recipientPhoneIdx: index('packages_recipient_phone_idx').on(
+      t.recipientPhone,
+    ),
+    trackingTokenIdx: uniqueIndex('packages_tracking_token_uidx').on(
+      t.trackingToken,
+    ),
+  }),
+);
+
+export const bankTransfers = pgTable(
+  'bank_transfers',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    paymentId: uuid('payment_id')
+      .notNull()
+      .references(() => payments.id),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id),
+    proofUrl: text('proof_url'),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+    verifiedBy: uuid('verified_by').references(() => users.id),
+    status: text('status').notNull().default('PENDING_REVIEW'),
+    adminNotes: text('admin_notes'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => ({
+    paymentIdx: uniqueIndex('bank_transfers_payment_id_uidx').on(t.paymentId),
+    orderIdx: index('bank_transfers_order_id_idx').on(t.orderId),
+    statusIdx: index('bank_transfers_status_idx').on(t.status),
   }),
 );

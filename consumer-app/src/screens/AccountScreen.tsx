@@ -148,7 +148,7 @@ export default function AccountScreen() {
     clerkUser?.fullName ??
     clerkUser?.firstName ??
     user?.email?.split('@')[0] ??
-    'SkyServe member';
+    'Queen member';
   const displayRole = role ? (ROLE_LABELS[role] ?? role) : 'Customer';
 
   return (
@@ -275,7 +275,7 @@ export default function AccountScreen() {
           className="text-subtle text-xs text-center mt-6"
           style={{ fontFamily: 'Inter_400Regular' }}
         >
-          {'SkyServe \u00B7 v1.0.0'}
+          {'Queen by Atelier \u00C9lev\u00E9 \u00B7 v1.0.0'}
         </Text>
       </ScrollView>
     </Screen>

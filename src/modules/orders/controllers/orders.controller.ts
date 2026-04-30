@@ -112,7 +112,8 @@ export class OrdersController {
       }
       if (
         user.role === Role.RESTAURANT_OWNER &&
-        !user.restaurantIds.includes(order.restaurantId)
+        (!order.restaurantId ||
+          !user.restaurantIds.includes(order.restaurantId))
       ) {
         throw new ForbiddenException('You do not own this restaurant');
       }

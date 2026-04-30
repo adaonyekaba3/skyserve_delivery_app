@@ -1,6 +1,6 @@
-# SkyServe Consumer App (Expo)
+# Queen Consumer App (Expo)
 
-Customer-facing mobile app: browse restaurants, build a cart, place an order, track delivery.
+The customer-facing mobile app for **Queen by Atelier Élevé**: browse curated luxury restaurants, build a cart, place an order, send packages by drone, and track delivery in real time.
 
 ## Setup
 

@@ -1,6 +1,6 @@
-# SkyServe Admin Dashboard (Next.js)
+# Queen Operations (Next.js)
 
-Web dashboard for operations:
+Web console for **Queen by Atelier Élevé** operations:
 
 - Orders table with status filtering
 - Drone fleet panel

@@ -45,7 +45,7 @@ export default function AuthScreen() {
             className="text-accent text-xs"
             style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 2 }}
           >
-            SKYSERVE FOR RESTAURANTS
+            QUEEN VENDOR CONSOLE
           </Text>
           <Text
             className="text-white text-3xl mt-2"
@@ -127,7 +127,7 @@ export default function AuthScreen() {
             className="text-subtle text-xs text-center mt-6"
             style={{ fontFamily: 'Inter_400Regular' }}
           >
-            Need an account? Reach out to the SkyServe ops team.
+            Need an account? Reach out to the Queen Operations team.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

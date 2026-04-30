@@ -14,12 +14,19 @@ type ClerkEmailAddress = {
   email_address?: string;
 };
 
+type ClerkPhoneNumber = {
+  id?: string;
+  phone_number?: string;
+};
+
 type ClerkUserData = {
   id?: string;
   first_name?: string | null;
   last_name?: string | null;
   primary_email_address_id?: string | null;
+  primary_phone_number_id?: string | null;
   email_addresses?: ClerkEmailAddress[];
+  phone_numbers?: ClerkPhoneNumber[];
   deleted?: boolean;
   public_metadata?: Record<string, unknown>;
   unsafe_metadata?: Record<string, unknown>;
@@ -117,6 +124,8 @@ export class IdentitySyncService {
 
     const email = pickPrimaryEmail(data) ?? `${clerkUserId}@clerk.local`;
     const fullName = pickFullName(data, email);
+    const phoneNumber = pickPrimaryPhone(data);
+    const defaultAddress = pickDefaultAddress(data);
 
     const [row] = await this.drizzleService.db
       .insert(users)
@@ -125,6 +134,8 @@ export class IdentitySyncService {
         email,
         fullName,
         role: 'CUSTOMER',
+        phoneNumber,
+        defaultAddress,
       })
       .onConflictDoUpdate({
         target: users.clerkUserId,
@@ -132,6 +143,8 @@ export class IdentitySyncService {
           email,
           fullName,
           isActive: true,
+          phoneNumber: phoneNumber ?? sql`${users.phoneNumber}`,
+          defaultAddress: defaultAddress ?? sql`${users.defaultAddress}`,
           updatedAt: sql`now()`,
         },
       })
@@ -180,4 +193,25 @@ function pickFullName(data: ClerkUserData, fallback: string): string {
   const last = (data.last_name ?? '').trim();
   const combined = [first, last].filter(Boolean).join(' ').trim();
   return combined || fallback;
+}
+
+function pickPrimaryPhone(data: ClerkUserData): string | null {
+  const list = Array.isArray(data.phone_numbers) ? data.phone_numbers : [];
+  if (data.primary_phone_number_id) {
+    const match = list.find((p) => p?.id === data.primary_phone_number_id);
+    if (match?.phone_number) return match.phone_number;
+  }
+  for (const entry of list) {
+    if (entry?.phone_number) return entry.phone_number;
+  }
+  return null;
+}
+
+function pickDefaultAddress(data: ClerkUserData): string | null {
+  const meta = (data.unsafe_metadata ?? data.public_metadata ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const value = meta.defaultAddress ?? meta.default_address;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
 }

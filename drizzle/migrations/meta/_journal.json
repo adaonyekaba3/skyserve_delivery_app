@@ -29,6 +29,13 @@
       "when": 1777511205701,
       "tag": "0003_admin_dashboard_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777654000000,
+      "tag": "0004_send_package_payments",
+      "breakpoints": true
     }
   ]
 }

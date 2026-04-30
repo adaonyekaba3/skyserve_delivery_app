@@ -1,4 +1,4 @@
-# SkyServe Frontend Runbook
+# Queen by Atelier Élevé — Frontend Runbook
 
 This runbook covers local development for:
 
@@ -66,7 +66,8 @@ Core flow:
 2. Open a restaurant and add menu items.
 3. Checkout creates an order and opens tracking.
 4. Tracking updates from Pusher channels.
-5. Checkout presents Stripe/Paystack/Flutterwave provider options.
+5. Checkout defaults to Flutterwave POS with bank-transfer fallback.
+6. Send Package flow is available from Home -> Send a package.
 
 ## 3) Restaurant app (`/restaurant-app`)
 
@@ -111,8 +112,20 @@ Set env:
 Views:
 
 - `/orders` realtime orders table + status filtering
+- `/packages` package-delivery queue (recipient type, route, tracking token)
+- `/bank-transfers` proof review queue with approve/reject actions
 - `/fleet` drone list + live status/battery
 - `/map` live map (Leaflet) with drone markers
+
+## Dev auto-seed behavior
+
+`npm run dev` now runs:
+
+1. `npm run db:migrate`
+2. `npm run seed:dev`
+3. backend dev server
+
+This auto-loads curated luxury vendors + menu data for local testing.
 
 ## 5) Drone simulator
 

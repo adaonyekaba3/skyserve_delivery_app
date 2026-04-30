@@ -14,8 +14,12 @@ import { AuditModule } from './modules/audit/audit.module';
 import { DronesModule } from './modules/drones/drones.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CartModule } from './modules/cart/cart.module';
+import { PackagesModule } from './modules/packages/packages.module';
+import { BankTransfersModule } from './modules/bank-transfers/bank-transfers.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 import { DatabaseModule } from './shared/database/database.module';
 import { RealtimeModule } from './shared/realtime/realtime.module';
+import { EventsModule } from './shared/events/events.module';
 
 @Module({
   imports: [
@@ -26,6 +30,7 @@ import { RealtimeModule } from './shared/realtime/realtime.module';
     }),
     DatabaseModule,
     RealtimeModule,
+    EventsModule,
     IdentityModule,
     UsersModule,
     RestaurantsModule,
@@ -40,6 +45,9 @@ import { RealtimeModule } from './shared/realtime/realtime.module';
     DronesModule,
     AdminModule,
     CartModule,
+    PackagesModule,
+    BankTransfersModule,
+    UploadsModule,
   ],
 })
 export class AppModule {}

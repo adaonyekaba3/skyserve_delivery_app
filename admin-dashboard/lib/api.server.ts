@@ -3,8 +3,10 @@ import { auth } from '@clerk/nextjs/server';
 import type {
   AdminInsights,
   AdminOverview,
+  BankTransfer,
   Drone,
   Order,
+  Package,
   Vendor,
   VendorPerformance,
 } from './types';
@@ -104,4 +106,13 @@ export async function fetchMe(): Promise<AuthedUser | null> {
   } catch {
     return null;
   }
+}
+
+export function fetchPackages() {
+  return safeFetch<Package[]>('/packages/all', []);
+}
+
+export function fetchBankTransfers(status?: string) {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+  return safeFetch<BankTransfer[]>(`/bank-transfers${qs}`, []);
 }

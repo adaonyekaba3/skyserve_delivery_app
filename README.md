@@ -1,6 +1,6 @@
-# Skyrunner Backend (Reset Architecture)
+# Queen by Atelier Élevé — Backend (modular monolith)
 
-Skyrunner backend has been reset to a modular-monolith-first architecture.
+Queen by Atelier Élevé is a premium drone-delivery logistics platform for affluent Lagos neighborhoods (Ikoyi, Banana Island, Victoria Island, Lekki). This repository hosts the modular-monolith-first backend that powers the Queen consumer app, the Queen Vendor Console, and Queen Operations.
 
 ## Legacy Archive
 

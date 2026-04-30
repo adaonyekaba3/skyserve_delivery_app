@@ -27,11 +27,11 @@ const MAP_PROVIDER = process.env.EXPO_PUBLIC_MAP_PROVIDER ?? 'google';
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN ?? '';
 
 const STATUS_HEADLINE: Record<OrderStatus, string> = {
-  PENDING: 'We received your order',
+  PENDING: 'Your order has been accepted by Queen',
   ACCEPTED: 'Restaurant accepted',
-  PREPARING: 'Your meal is being prepared',
+  PREPARING: 'Queen is preparing your order',
   PICKED_UP: 'Drone has picked it up',
-  IN_FLIGHT: 'Your order is in flight',
+  IN_FLIGHT: 'Your Queen delivery is arriving',
   DELIVERED: 'Delivered. Enjoy!',
   CANCELLED: 'Order cancelled',
 };
@@ -65,9 +65,11 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
       .then(async ([orderData, me]) => {
         if (!active) return;
         upsert(orderData);
-        setUserDbId(me.dbUserId);
-        const r = await getRestaurant(orderData.restaurantId);
-        if (active) setRestaurant(r);
+        setUserDbId(me.user.dbUserId);
+        if (orderData.restaurantId) {
+          const r = await getRestaurant(orderData.restaurantId);
+          if (active) setRestaurant(r);
+        }
       })
       .catch((err) => active && setError((err as Error).message))
       .finally(() => active && setLoading(false));
@@ -329,7 +331,7 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
                 onPress={() =>
                   Alert.alert(
                     'Concierge support',
-                    'Tap call to reach a SkyServe agent.',
+                    'Tap call to reach a Queen concierge.',
                     [
                       { text: 'Cancel', style: 'cancel' },
                       {

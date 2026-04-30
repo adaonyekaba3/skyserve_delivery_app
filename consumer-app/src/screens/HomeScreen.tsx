@@ -27,6 +27,7 @@ import {
   Button,
 } from '../ui';
 import type { HomeStackParamList } from '../navigation/RootNavigator';
+import { BrandWordmark } from '../branding/BrandWordmark';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
@@ -75,22 +76,7 @@ function HomeHeader({
   return (
     <View className="px-5 pt-2 pb-1">
       <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          <View className="h-9 w-9 rounded-full bg-primary items-center justify-center">
-            <Text
-              className="text-accent text-lg"
-              style={{ fontFamily: 'Inter_700Bold' }}
-            >
-              S
-            </Text>
-          </View>
-          <Text
-            className="text-text text-lg"
-            style={{ fontFamily: 'Inter_700Bold' }}
-          >
-            SkyServe
-          </Text>
-        </View>
+        <BrandWordmark variant="compact" />
         <View className="flex-row items-center gap-3">
           <LocationDropdown value={location} onChange={onLocationChange} />
           <Pressable
@@ -189,7 +175,7 @@ export default function HomeScreen(_props: Props) {
   const notifyMeWhenLive = useCallback(() => {
     Alert.alert(
       'You\u2019re on the list',
-      `We\u2019ll notify you the moment Skyrunner goes live in ${location}.`,
+      `We\u2019ll notify you the moment Queen goes live in ${location}.`,
     );
   }, [location]);
 
@@ -231,6 +217,65 @@ export default function HomeScreen(_props: Props) {
             >
               {'Drone delivery in 10\u201315 minutes.'}
             </Text>
+
+            <Pressable
+              onPress={() =>
+                navigation
+                  .getParent()
+                  ?.navigate('SendPackage', { screen: 'Step1Sender' })
+              }
+              className="mb-4"
+            >
+              <View
+                className="rounded-lg overflow-hidden"
+                style={{
+                  backgroundColor: '#0B1C2C',
+                  borderWidth: 1,
+                  borderColor: '#C6A052',
+                }}
+              >
+                <View className="flex-row items-center px-4 py-4">
+                  <View
+                    className="h-12 w-12 rounded-full items-center justify-center"
+                    style={{ backgroundColor: 'rgba(198,160,82,0.18)' }}
+                  >
+                    <Icon name="send" size={20} color="#C6A052" />
+                  </View>
+                  <View className="ml-3 flex-1">
+                    <View className="flex-row items-center gap-2">
+                      <Text
+                        className="text-cream"
+                        style={{ fontFamily: 'Inter_700Bold', fontSize: 16 }}
+                      >
+                        Send a package
+                      </Text>
+                      <View
+                        className="px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: '#C6A052' }}
+                      >
+                        <Text
+                          className="text-primary"
+                          style={{
+                            fontFamily: 'Inter_700Bold',
+                            fontSize: 10,
+                          }}
+                        >
+                          NEW
+                        </Text>
+                      </View>
+                    </View>
+                    <Text
+                      className="text-cream/70 mt-1 text-xs"
+                      style={{ fontFamily: 'Inter_400Regular' }}
+                    >
+                      Drone courier across Ikoyi, V.I., Banana Island & Lekki in
+                      10-15 min.
+                    </Text>
+                  </View>
+                  <Icon name="chevron-right" size={20} color="#C6A052" />
+                </View>
+              </View>
+            </Pressable>
 
             <Input
               value={search}

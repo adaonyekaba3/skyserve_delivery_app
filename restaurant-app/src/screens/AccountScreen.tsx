@@ -214,7 +214,7 @@ export default function AccountScreen() {
           className="text-subtle text-xs text-center mt-6"
           style={{ fontFamily: 'Inter_400Regular' }}
         >
-          SkyServe for Restaurants \u00B7 v1.0.0
+          Queen Vendor Console \u00B7 v1.0.0
         </Text>
       </ScrollView>
     </Screen>

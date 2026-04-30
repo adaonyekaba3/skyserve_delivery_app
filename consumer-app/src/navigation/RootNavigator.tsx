@@ -9,9 +9,12 @@ import HomeScreen from '../screens/HomeScreen';
 import RestaurantDetailScreen from '../screens/RestaurantDetailScreen';
 import CartScreen from '../screens/CartScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
+import BankTransferScreen from '../screens/BankTransferScreen';
 import OrderTrackingScreen from '../screens/OrderTrackingScreen';
 import OrderHistoryScreen from '../screens/OrderHistoryScreen';
 import AccountScreen from '../screens/AccountScreen';
+import PackageTrackingScreen from '../screens/PackageTrackingScreen';
+import SendPackageNavigator from './SendPackageNavigator';
 import { Loader, Icon, type IconName } from '../ui';
 import { useCart } from '../store/cart';
 
@@ -27,7 +30,18 @@ export type OrdersStackParamList = {
 
 export type CartStackParamList = {
   Cart: { restaurantId?: string } | undefined;
-  Checkout: { restaurantId: string };
+  Checkout: {
+    restaurantId?: string;
+    orderId?: string;
+    totalAmount?: string;
+    flow?: 'food' | 'package';
+  };
+  BankTransfer: {
+    paymentId: string;
+    orderId: string;
+    instructions: import('../services/types').BankTransferInstructions;
+    flow?: 'food' | 'package';
+  };
   OrderTracking: { orderId: string };
 };
 
@@ -45,6 +59,13 @@ export type MainTabsParamList = {
 export type RootStackParamList = {
   Auth: undefined;
   MainTabs: undefined;
+  SendPackage: undefined;
+  PackageTracking: {
+    packageId: string;
+    trackingToken: string;
+    orderId: string;
+    amount?: string;
+  };
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -87,6 +108,7 @@ function CartStackNav() {
     <CartStack.Navigator screenOptions={stackOpts}>
       <CartStack.Screen name="Cart" component={CartScreen} />
       <CartStack.Screen name="Checkout" component={CheckoutScreen} />
+      <CartStack.Screen name="BankTransfer" component={BankTransferScreen} />
       <CartStack.Screen name="OrderTracking" component={OrderTrackingScreen} />
     </CartStack.Navigator>
   );
@@ -231,7 +253,17 @@ export default function RootNavigator() {
     <NavigationContainer>
       <RootStack.Navigator screenOptions={stackOpts}>
         {isAuthed ? (
-          <RootStack.Screen name="MainTabs" component={MainTabs} />
+          <>
+            <RootStack.Screen name="MainTabs" component={MainTabs} />
+            <RootStack.Screen
+              name="SendPackage"
+              component={SendPackageNavigator}
+            />
+            <RootStack.Screen
+              name="PackageTracking"
+              component={PackageTrackingScreen}
+            />
+          </>
         ) : (
           <RootStack.Screen name="Auth" component={AuthScreen} />
         )}

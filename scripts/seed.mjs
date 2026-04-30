@@ -4,241 +4,80 @@ import 'dotenv/config';
 import pg from 'pg';
 
 const { Pool } = pg;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) {
-  console.error('DATABASE_URL is required');
-  process.exit(1);
-}
+const IMG =
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80';
 
-const pool = new Pool({ connectionString: DATABASE_URL });
-
-const SEED_USERS = [
-  {
-    clerkUserId: 'seed_admin',
-    email: 'admin@skyserve.local',
-    fullName: 'Skyserve Admin',
-    role: 'ADMIN',
-  },
-  {
-    clerkUserId: 'seed_owner',
-    email: 'owner@skyserve.local',
-    fullName: 'Restaurant Owner',
-    role: 'RESTAURANT_OWNER',
-  },
-  {
-    clerkUserId: 'seed_customer',
-    email: 'customer@skyserve.local',
-    fullName: 'Hungry Customer',
-    role: 'CUSTOMER',
-  },
-  {
-    clerkUserId: 'seed_dev',
-    email: 'dev@skyrunner.local',
-    fullName: 'Dev User',
-    role: 'ADMIN',
-  },
+const VENDORS = [
+  ['Orchids Bistro', 'Continental / Healthy', 'Ikoyi', '58A Isaac John St, Ikoyi, Lagos', '6.4519', '3.4301'],
+  ['RSVP Lagos', 'Fine Dining', 'Victoria Island', '9 Eletu Ogabi St, Victoria Island, Lagos', '6.4313', '3.4335'],
+  ['Circa Lagos', 'Contemporary Dining', 'Victoria Island', '2 Kafi St, Victoria Island, Lagos', '6.4288', '3.4320'],
+  ['Noir Lagos', 'Pan-Asian', 'Victoria Island', '4A A.J. Marinho Dr, Victoria Island, Lagos', '6.4299', '3.4219'],
+  ['Eric Kayser Lagos', 'Bakery / Café', 'Ikoyi', '1a Ozumba Mbadiwe Ave, Ikoyi, Lagos', '6.4368', '3.4312'],
+  ['Mai Shayi Coffee Roasters Lagos', 'Specialty Coffee / Café', 'Victoria Island', '3 Idejo St, Victoria Island, Lagos', '6.4357', '3.4308'],
 ];
 
-const SEED_RESTAURANTS = [
-  {
-    name: 'Skyline Burgers',
-    address: '12 Marina Way, Lagos',
-    latitude: '6.4501',
-    longitude: '3.3947',
-  },
-  {
-    name: 'Cloud Kitchen Pizza',
-    address: '34 Allen Ave, Ikeja',
-    latitude: '6.6018',
-    longitude: '3.3515',
-  },
-  {
-    name: 'Drone Sushi',
-    address: '78 Admiralty Way, Lekki',
-    latitude: '6.4283',
-    longitude: '3.4583',
-  },
-];
-
-const MENUS = {
-  'Skyline Burgers': [
-    {
-      name: 'Cheeseburger',
-      price: '4500.00',
-      description: 'Beef patty + cheddar',
-    },
-    {
-      name: 'Chicken Burger',
-      price: '4200.00',
-      description: 'Crispy chicken thigh',
-    },
-    {
-      name: 'Sky Fries',
-      price: '1500.00',
-      description: 'Salted hand-cut fries',
-    },
-    { name: 'Iced Tea', price: '1200.00', description: 'Lemon iced tea' },
-    {
-      name: 'Veggie Wrap',
-      price: '3800.00',
-      description: 'Garden veggies + hummus',
-    },
-  ],
-  'Cloud Kitchen Pizza': [
-    {
-      name: 'Margherita',
-      price: '6500.00',
-      description: 'Tomato, mozzarella, basil',
-    },
-    {
-      name: 'Pepperoni',
-      price: '7200.00',
-      description: 'Beef pepperoni + cheese',
-    },
-    {
-      name: 'BBQ Chicken',
-      price: '7500.00',
-      description: 'BBQ sauce + grilled chicken',
-    },
-    {
-      name: 'Vegetarian',
-      price: '6800.00',
-      description: 'Peppers, mushrooms, onions',
-    },
-    { name: 'Coke 50cl', price: '900.00', description: 'Chilled' },
-  ],
-  'Drone Sushi': [
-    {
-      name: 'Salmon Nigiri (6)',
-      price: '5500.00',
-      description: 'Fresh salmon over rice',
-    },
-    {
-      name: 'California Roll',
-      price: '4800.00',
-      description: 'Crab + avocado + cucumber',
-    },
-    {
-      name: 'Spicy Tuna Roll',
-      price: '5200.00',
-      description: 'With sriracha mayo',
-    },
-    { name: 'Edamame', price: '1800.00', description: 'Steamed soybeans' },
-    { name: 'Miso Soup', price: '1500.00', description: 'Tofu + seaweed' },
-  ],
+const MENU = {
+  'Orchids Bistro': [['Grilled Salmon Bowl', '14500'], ['Chicken Avocado Salad', '11200'], ['Lemon Herb Pasta', '9800']],
+  'RSVP Lagos': [['Truffle Jollof Arancini', '11800'], ['Seared Sea Bass', '18500'], ['Lobster Tagliatelle', '22500']],
+  'Circa Lagos': [['Braised Short Rib', '16400'], ['Smoked Turkey Suya Bites', '9200'], ['Burrata Tomato Tartine', '10600']],
+  'Noir Lagos': [['Spicy Tuna Maki', '13200'], ['Miso Black Cod', '19800'], ['Prawn Yakisoba', '14900']],
+  'Eric Kayser Lagos': [['Almond Croissant', '6200'], ['Pain au Chocolat', '5900'], ['Turkey Club Sandwich', '9800']],
+  'Mai Shayi Coffee Roasters Lagos': [['Cold Brew Coffee', '5400'], ['Signature Latte', '6100'], ['Butter Croissant', '4300']],
 };
 
-const DRONES = [
-  { code: 'SKY-001', latitude: '6.4501', longitude: '3.3947' },
-  { code: 'SKY-002', latitude: '6.6018', longitude: '3.3515' },
-  { code: 'SKY-003', latitude: '6.4283', longitude: '3.4583' },
-  { code: 'SKY-004', latitude: '6.5244', longitude: '3.3792' },
-];
-
 async function upsertUser(client, user) {
-  const res = await client.query(
-    `INSERT INTO users (clerk_user_id, email, full_name, role)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (clerk_user_id) DO UPDATE SET email = EXCLUDED.email, full_name = EXCLUDED.full_name, role = EXCLUDED.role
-     RETURNING id, email, role`,
-    [user.clerkUserId, user.email, user.fullName, user.role],
-  );
-  return res.rows[0];
-}
-
-async function upsertRestaurant(client, ownerId, restaurant) {
-  const existing = await client.query(
-    `SELECT id FROM restaurants WHERE name = $1 AND owner_id = $2`,
-    [restaurant.name, ownerId],
-  );
-  if (existing.rows[0]) {
-    return existing.rows[0];
-  }
-  const res = await client.query(
-    `INSERT INTO restaurants (owner_id, name, address, latitude, longitude)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id`,
-    [
-      ownerId,
-      restaurant.name,
-      restaurant.address,
-      restaurant.latitude,
-      restaurant.longitude,
-    ],
-  );
-  return res.rows[0];
-}
-
-async function upsertMenuItem(client, restaurantId, item) {
-  const existing = await client.query(
-    `SELECT id FROM menu_items WHERE restaurant_id = $1 AND name = $2`,
-    [restaurantId, item.name],
-  );
-  if (existing.rows[0]) {
-    return existing.rows[0];
-  }
-  const res = await client.query(
-    `INSERT INTO menu_items (restaurant_id, name, description, price)
-     VALUES ($1, $2, $3, $4)
-     RETURNING id`,
-    [restaurantId, item.name, item.description, item.price],
-  );
-  return res.rows[0];
-}
-
-async function upsertDrone(client, drone) {
-  const existing = await client.query(`SELECT id FROM drones WHERE code = $1`, [
-    drone.code,
-  ]);
-  if (existing.rows[0]) {
-    return existing.rows[0];
-  }
-  const res = await client.query(
-    `INSERT INTO drones (code, status, battery_pct, current_latitude, current_longitude)
-     VALUES ($1, 'IDLE', 100, $2, $3)
-     RETURNING id`,
-    [drone.code, drone.latitude, drone.longitude],
-  );
-  return res.rows[0];
+  const q = `INSERT INTO users (clerk_user_id,email,full_name,role,phone_number,default_address,default_latitude,default_longitude)
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+  ON CONFLICT (clerk_user_id) DO UPDATE SET email=EXCLUDED.email,full_name=EXCLUDED.full_name,role=EXCLUDED.role,phone_number=EXCLUDED.phone_number,default_address=EXCLUDED.default_address,default_latitude=EXCLUDED.default_latitude,default_longitude=EXCLUDED.default_longitude
+  RETURNING id`;
+  return (await client.query(q, [user.clerkUserId, user.email, user.fullName, user.role, user.phone, user.address, user.lat, user.lng])).rows[0];
 }
 
 async function main() {
   const client = await pool.connect();
   try {
-    console.log('Seeding users...');
-    const users = {};
-    for (const u of SEED_USERS) {
-      const row = await upsertUser(client, u);
-      users[u.clerkUserId] = row;
-      console.log(`  ${u.role} ${u.email} -> ${row.id}`);
-    }
+    const owner = await upsertUser(client, { clerkUserId: 'seed_owner', email: 'owner@skyrunner.local', fullName: 'Skyrunner Vendor Ops', role: 'RESTAURANT_OWNER', phone: '+2348090000001', address: '5A Kofo Abayomi St, Victoria Island', lat: '6.4309', lng: '3.4260' });
+    await upsertUser(client, { clerkUserId: 'seed_admin', email: 'admin@skyrunner.local', fullName: 'Skyrunner Admin', role: 'ADMIN', phone: '+2348090000000', address: '22A Alfred Rewane Rd, Ikoyi', lat: '6.4502', lng: '3.4307' });
+    await upsertUser(client, { clerkUserId: 'seed_customer', email: 'customer@skyrunner.local', fullName: 'Adaobi Okonkwo', role: 'CUSTOMER', phone: '+2348035551234', address: '12 Bourdillon Rd, Ikoyi, Lagos', lat: '6.4488', lng: '3.4300' });
+    await upsertUser(client, { clerkUserId: 'seed_dev', email: 'dev@skyrunner.local', fullName: 'Dev User', role: 'ADMIN', phone: '+2348030000000', address: '23A Admiralty Way, Lekki', lat: '6.4381', lng: '3.4721' });
 
-    const owner = users.seed_owner;
-    console.log('Seeding restaurants...');
-    const restaurantIds = {};
-    for (const r of SEED_RESTAURANTS) {
-      const row = await upsertRestaurant(client, owner.id, r);
-      restaurantIds[r.name] = row.id;
-      console.log(`  ${r.name} -> ${row.id}`);
-    }
-
-    console.log('Seeding menu items...');
-    for (const r of SEED_RESTAURANTS) {
-      const items = MENUS[r.name] ?? [];
-      for (const item of items) {
-        const row = await upsertMenuItem(client, restaurantIds[r.name], item);
-        console.log(`  ${r.name} :: ${item.name} -> ${row.id}`);
+    for (const [name, category, location, address, lat, lng] of VENDORS) {
+      const ins = await client.query(
+        `INSERT INTO restaurants (owner_id,name,address,latitude,longitude,category,location,is_active)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,true)
+         ON CONFLICT DO NOTHING RETURNING id`,
+        [owner.id, name, address, lat, lng, category, location],
+      );
+      const rid = ins.rows[0]?.id ?? (await client.query(`SELECT id FROM restaurants WHERE name=$1 LIMIT 1`, [name])).rows[0].id;
+      for (const [item, price] of MENU[name]) {
+        await client.query(
+          `INSERT INTO menu_items (restaurant_id,name,description,image_url,price,is_available)
+           VALUES ($1,$2,$3,$4,$5,true)
+           ON CONFLICT DO NOTHING`,
+          [rid, item, `${category} favorite`, `${IMG}&sig=${encodeURIComponent(name + item)}`, price],
+        );
       }
     }
 
-    console.log('Seeding drones...');
-    for (const d of DRONES) {
-      const row = await upsertDrone(client, d);
-      console.log(`  ${d.code} -> ${row.id}`);
+    const drones = [
+      ['SKY-IKY-01', '6.4510', '3.4280'],
+      ['SKY-IKY-02', '6.4494', '3.4312'],
+      ['SKY-VI-01', '6.4301', '3.4301'],
+      ['SKY-VI-02', '6.4279', '3.4322'],
+      ['SKY-LEK-01', '6.4450', '3.4790'],
+      ['SKY-LEK-02', '6.4428', '3.4761'],
+    ];
+    for (const [code, lat, lng] of drones) {
+      await client.query(
+        `INSERT INTO drones (code,status,battery_pct,current_latitude,current_longitude)
+         VALUES ($1,'IDLE',100,$2,$3)
+         ON CONFLICT (code) DO UPDATE SET current_latitude=EXCLUDED.current_latitude,current_longitude=EXCLUDED.current_longitude`,
+        [code, lat, lng],
+      );
     }
-
-    console.log('Seed complete.');
+    console.log('Luxury seed complete.');
   } finally {
     client.release();
     await pool.end();

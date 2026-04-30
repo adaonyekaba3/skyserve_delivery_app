@@ -3,20 +3,21 @@ import { PaymentsController } from './controllers/payments.controller';
 import { PaymentsService } from './application/payments.service';
 import { PaystackProvider } from './adapters/paystack/paystack.provider';
 import { FlutterwaveProvider } from './adapters/flutterwave/flutterwave.provider';
-import { OutboxService } from 'src/shared/events/outbox.service';
+import { BankTransferProvider } from './adapters/bank-transfer/bank-transfer.provider';
 import { StripeProvider } from './adapters/stripe/stripe.provider';
 import { OrdersModule } from '../orders/orders.module';
+import { RealtimeModule } from 'src/shared/realtime/realtime.module';
 
 @Module({
-  imports: [OrdersModule],
+  imports: [OrdersModule, RealtimeModule],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,
     StripeProvider,
     PaystackProvider,
     FlutterwaveProvider,
-    OutboxService,
+    BankTransferProvider,
   ],
-  exports: [PaymentsService],
+  exports: [PaymentsService, BankTransferProvider],
 })
 export class PaymentsModule {}

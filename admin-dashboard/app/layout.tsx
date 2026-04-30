@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'SkyServe Admin',
-  description: 'Operator dashboard for SkyServe drone delivery',
+  title: 'Queen Operations',
+  description: 'Operator console for Queen by Atelier Élevé drone delivery',
 };
 
 export default function RootLayout({

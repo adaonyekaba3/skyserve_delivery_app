@@ -3,10 +3,12 @@
 import type {
   AdminInsights,
   AdminOverview,
+  BankTransfer,
   CreateVendorPayload,
   Drone,
   Order,
   OrderStatus,
+  Package,
   Vendor,
   VendorPerformance,
 } from './types';
@@ -73,4 +75,27 @@ export function setVendorActive(id: string, isActive: boolean) {
 }
 export function fetchVendorPerformance(id: string) {
   return authedFetch<VendorPerformance>(`/restaurants/${id}/performance`);
+}
+
+export function fetchPackages() {
+  return authedFetch<Package[]>('/packages/all');
+}
+
+export function fetchBankTransfers(status?: string) {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+  return authedFetch<BankTransfer[]>(`/bank-transfers${qs}`);
+}
+
+export function approveBankTransfer(id: string, notes?: string) {
+  return authedFetch<BankTransfer>(`/bank-transfers/${id}/approve`, {
+    method: 'PATCH',
+    body: JSON.stringify({ notes }),
+  });
+}
+
+export function rejectBankTransfer(id: string, notes: string) {
+  return authedFetch<BankTransfer>(`/bank-transfers/${id}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({ notes }),
+  });
 }

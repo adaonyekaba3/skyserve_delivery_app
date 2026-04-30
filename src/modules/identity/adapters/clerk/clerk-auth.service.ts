@@ -83,9 +83,12 @@ export class ClerkAuthService {
     };
   }
 
-  private async verifyClerkJwt(
-    token: string,
-  ): Promise<{ sub?: string; email?: string }> {
+  private async verifyClerkJwt(token: string): Promise<{
+    sub?: string;
+    email?: string;
+    phoneNumber?: string;
+    defaultAddress?: string;
+  }> {
     const secretKey = process.env.CLERK_SECRET_KEY;
     if (!secretKey) {
       throw new UnauthorizedException('CLERK_SECRET_KEY is not configured');
@@ -95,6 +98,21 @@ export class ClerkAuthService {
         string,
         unknown
       >;
+      const meta = (claims.unsafe_metadata ??
+        claims.public_metadata ??
+        {}) as Record<string, unknown>;
+      const phone =
+        typeof claims.phone_number === 'string'
+          ? (claims.phone_number as string)
+          : typeof claims.primary_phone_number === 'string'
+            ? (claims.primary_phone_number as string)
+            : undefined;
+      const defaultAddress =
+        typeof meta.defaultAddress === 'string'
+          ? (meta.defaultAddress as string)
+          : typeof meta.default_address === 'string'
+            ? (meta.default_address as string)
+            : undefined;
       return {
         sub: typeof claims.sub === 'string' ? claims.sub : undefined,
         email:
@@ -105,6 +123,8 @@ export class ClerkAuthService {
               ? ((claims.email_address ??
                   claims.primary_email_address) as string)
               : undefined,
+        phoneNumber: phone,
+        defaultAddress,
       };
     } catch (err) {
       throw new UnauthorizedException(
@@ -115,7 +135,11 @@ export class ClerkAuthService {
 
   private async findOrProvisionDbUser(
     clerkUserId: string,
-    claims: { email?: string },
+    claims: {
+      email?: string;
+      phoneNumber?: string;
+      defaultAddress?: string;
+    },
   ) {
     const existing = await this.drizzleService.db
       .select()
@@ -124,7 +148,24 @@ export class ClerkAuthService {
       .limit(1);
 
     if (existing[0]) {
-      return existing[0];
+      const row = existing[0];
+      const updates: Record<string, string | Date> = {};
+      if (!row.phoneNumber && claims.phoneNumber) {
+        updates.phoneNumber = claims.phoneNumber;
+      }
+      if (!row.defaultAddress && claims.defaultAddress) {
+        updates.defaultAddress = claims.defaultAddress;
+      }
+      if (Object.keys(updates).length) {
+        updates.updatedAt = new Date();
+        const [updated] = await this.drizzleService.db
+          .update(users)
+          .set(updates)
+          .where(eq(users.id, row.id))
+          .returning();
+        return updated ?? row;
+      }
+      return row;
     }
 
     const [created] = await this.drizzleService.db
@@ -134,6 +175,8 @@ export class ClerkAuthService {
         email: claims.email ?? `${clerkUserId}@clerk.local`,
         fullName: claims.email ?? clerkUserId,
         role: 'CUSTOMER',
+        phoneNumber: claims.phoneNumber ?? null,
+        defaultAddress: claims.defaultAddress ?? null,
       })
       .returning();
     return created;

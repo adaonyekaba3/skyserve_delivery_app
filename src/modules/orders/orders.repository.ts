@@ -41,4 +41,13 @@ export class OrdersRepository extends BaseRepository {
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId));
   }
+
+  findPackagesOnly(limit = 100) {
+    return this.db
+      .select()
+      .from(orders)
+      .where(eq(orders.orderType, 'package_delivery'))
+      .orderBy(desc(orders.createdAt))
+      .limit(limit);
+  }
 }

@@ -160,14 +160,9 @@ export class OrdersService {
       throw new NotFoundException(`Order ${orderId} not found`);
     }
 
-    await Promise.all([
+    const triggers: Promise<void>[] = [
       this.pusherService.trigger(
         `private-customer-${updated.customerId}`,
-        'order_status_updated',
-        updated,
-      ),
-      this.pusherService.trigger(
-        `private-restaurant-${updated.restaurantId}`,
         'order_status_updated',
         updated,
       ),
@@ -176,7 +171,26 @@ export class OrdersService {
         type: 'status_updated',
         order: updated,
       }),
-    ]);
+    ];
+    if (updated.restaurantId) {
+      triggers.push(
+        this.pusherService.trigger(
+          `private-restaurant-${updated.restaurantId}`,
+          'order_status_updated',
+          updated,
+        ),
+      );
+    }
+    if (updated.orderType === 'package_delivery') {
+      triggers.push(
+        this.pusherService.trigger('private-admin', 'package_changed', {
+          type: 'status_updated',
+          orderId: updated.id,
+          status: updated.status,
+        }),
+      );
+    }
+    await Promise.all(triggers);
 
     return updated;
   }

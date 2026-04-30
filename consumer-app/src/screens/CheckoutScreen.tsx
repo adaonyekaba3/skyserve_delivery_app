@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Linking, Pressable } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createOrder, initializePayment } from '../services/api';
+import * as WebBrowser from 'expo-web-browser';
+import {
+  createOrder,
+  getPaymentStatus,
+  initializePayment,
+} from '../services/api';
 import { useCart } from '../store/cart';
 import {
   Screen,
@@ -13,6 +18,10 @@ import {
   Icon,
   type IconName,
 } from '../ui';
+import {
+  notifyPaymentFailure,
+  notifyPaymentSuccess,
+} from '../services/notifications';
 import type { CartStackParamList } from '../navigation/RootNavigator';
 import type { PaymentProvider } from '../services/types';
 
@@ -25,22 +34,16 @@ const PROVIDERS: {
   icon: IconName;
 }[] = [
   {
-    id: 'PAYSTACK',
-    label: 'Paystack',
-    sub: `Cards \u00B7 Bank \u00B7 USSD`,
-    icon: 'credit-card',
-  },
-  {
-    id: 'STRIPE',
-    label: 'Stripe',
-    sub: 'International cards',
-    icon: 'credit-card',
-  },
-  {
     id: 'FLUTTERWAVE',
-    label: 'Flutterwave',
-    sub: 'Mobile money + cards',
-    icon: 'smartphone',
+    label: 'Flutterwave POS',
+    sub: 'Cards \u00B7 Bank \u00B7 USSD',
+    icon: 'credit-card',
+  },
+  {
+    id: 'BANK_TRANSFER',
+    label: 'Bank transfer (Providus)',
+    sub: 'Pay in your bank app, upload proof',
+    icon: 'upload',
   },
 ];
 
@@ -60,46 +63,107 @@ function SectionHeader({ icon, label }: { icon: IconName; label: string }) {
   );
 }
 
+const formatNgn = (n: number) => `\u20A6${n.toLocaleString('en-NG')}`;
+
 export default function CheckoutScreen({ navigation, route }: Props) {
+  const flow = route.params?.flow ?? 'food';
+  const passedOrderId = route.params?.orderId ?? null;
+  const passedAmount = route.params?.totalAmount ?? null;
   const lines = useCart((s) => Object.values(s.lines));
-  const total = useCart((s) => s.totalAmount());
+  const cartTotal = useCart((s) => s.totalAmount());
   const clear = useCart((s) => s.clear);
   const [address, setAddress] = useState('');
-  const [provider, setProvider] = useState<PaymentProvider>('PAYSTACK');
+  const [provider, setProvider] = useState<PaymentProvider>('FLUTTERWAVE');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const totalNumeric = passedAmount
+    ? Number(passedAmount)
+    : cartTotal;
+
+  const isPackage = flow === 'package';
+
+  useEffect(() => {
+    if (isPackage) {
+      // Package flow: address already chosen in wizard.
+      setAddress('');
+    }
+  }, [isPackage]);
+
   const place = async () => {
-    if (!address.trim()) {
+    if (!isPackage && !address.trim()) {
       setError('Please enter a delivery address');
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const order = await createOrder({
-        restaurantId: route.params.restaurantId,
-        deliveryAddress: address.trim(),
-        items: lines.map((l) => ({
-          menuItemId: l.menuItem.id,
-          quantity: l.quantity,
-        })),
-      });
-      const init = await initializePayment({
-        orderId: order.id,
-        amount: order.totalAmount,
-        currency: 'NGN',
-        callbackUrl: 'https://example.com/payment-callback',
-        provider,
-        idempotencyKey: `${order.id}:${provider}`,
-      });
-      if (init.authorizationUrl) {
-        await Linking.openURL(init.authorizationUrl);
+      let orderId = passedOrderId;
+      let amount = passedAmount;
+
+      if (!orderId) {
+        const order = await createOrder({
+          restaurantId: route.params!.restaurantId!,
+          deliveryAddress: address.trim(),
+          items: lines.map((l) => ({
+            menuItemId: l.menuItem.id,
+            quantity: l.quantity,
+          })),
+        });
+        orderId = order.id;
+        amount = order.totalAmount;
       }
-      clear();
-      navigation.replace('OrderTracking', { orderId: order.id });
+
+      const init = await initializePayment({
+        orderId: orderId!,
+        amount: amount!,
+        currency: 'NGN',
+        callbackUrl:
+          process.env.EXPO_PUBLIC_PAYMENT_CALLBACK_URL ??
+          'https://app.skyrunner.ng/payment/callback',
+        provider,
+        idempotencyKey: `${orderId}:${provider}`,
+      });
+
+      if (provider === 'BANK_TRANSFER') {
+        if (!init.instructions) {
+          throw new Error('Bank transfer instructions unavailable');
+        }
+        navigation.replace('BankTransfer', {
+          paymentId: init.id,
+          orderId: orderId!,
+          instructions: init.instructions,
+          flow,
+        });
+        return;
+      }
+
+      if (init.authorizationUrl) {
+        await WebBrowser.openBrowserAsync(init.authorizationUrl, {
+          dismissButtonStyle: 'close',
+        });
+      }
+
+      if (init.providerRef) {
+        try {
+          const status = await getPaymentStatus(init.providerRef);
+          if (status.status === 'CAPTURED' || status.status === 'AUTHORIZED') {
+            void notifyPaymentSuccess();
+          } else if (status.status === 'FAILED') {
+            void notifyPaymentFailure();
+          }
+        } catch {
+          // Status check is best-effort; webhook will still settle the payment.
+        }
+      }
+
+      if (!isPackage) clear();
+      navigation.replace('OrderTracking', { orderId: orderId! });
     } catch (err) {
-      setError((err as Error).message || 'Could not place order');
+      const msg =
+        (err as { response?: { data?: { message?: string } }; message?: string })
+          ?.response?.data?.message ?? (err as Error).message;
+      setError(msg ?? 'Could not place order');
     } finally {
       setBusy(false);
     }
@@ -109,7 +173,11 @@ export default function CheckoutScreen({ navigation, route }: Props) {
     <Screen edges={['top', 'left', 'right']}>
       <AppHeader
         title="Checkout"
-        subtitle="Confirm your delivery and payment"
+        subtitle={
+          isPackage
+            ? 'Pay for your drone courier'
+            : 'Confirm your delivery and payment'
+        }
         showBack
       />
       <ScrollView
@@ -118,25 +186,27 @@ export default function CheckoutScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Card className="mb-4" padding="lg">
-          <SectionHeader icon="navigation" label="Delivery address" />
-          <Input
-            value={address}
-            onChangeText={setAddress}
-            placeholder="123 Marina Way, Lagos"
-            multiline
-            style={{ minHeight: 60, textAlignVertical: 'top' }}
-          />
-          <View className="flex-row items-center gap-1.5 mt-2">
-            <Icon name="clock" size={12} color="#64748B" />
-            <Text
-              className="text-subtle text-xs"
-              style={{ fontFamily: 'Inter_400Regular' }}
-            >
-              {`Drone arrives in ~10\u201315 min after confirmation.`}
-            </Text>
-          </View>
-        </Card>
+        {!isPackage ? (
+          <Card className="mb-4" padding="lg">
+            <SectionHeader icon="navigation" label="Delivery address" />
+            <Input
+              value={address}
+              onChangeText={setAddress}
+              placeholder="123 Marina Way, Lagos"
+              multiline
+              style={{ minHeight: 60, textAlignVertical: 'top' }}
+            />
+            <View className="flex-row items-center gap-1.5 mt-2">
+              <Icon name="clock" size={12} color="#64748B" />
+              <Text
+                className="text-subtle text-xs"
+                style={{ fontFamily: 'Inter_400Regular' }}
+              >
+                {`Drone arrives in ~10\u201315 min after confirmation.`}
+              </Text>
+            </View>
+          </Card>
+        ) : null}
 
         <Card className="mb-4" padding="lg">
           <SectionHeader icon="credit-card" label="Payment method" />
@@ -185,57 +255,43 @@ export default function CheckoutScreen({ navigation, route }: Props) {
 
         <Card padding="lg">
           <SectionHeader icon="file-text" label="Order summary" />
-          {lines.map((l) => (
-            <View
-              key={l.menuItem.id}
-              className="flex-row justify-between py-1.5"
-            >
-              <Text
-                className="text-text text-sm flex-1 pr-2"
-                style={{ fontFamily: 'Inter_500Medium' }}
-                numberOfLines={1}
-              >
-                {`${l.menuItem.name} \u00D7 ${l.quantity}`}
-              </Text>
-              <Text
-                className="text-muted text-sm"
-                style={{ fontFamily: 'Inter_500Medium' }}
-              >
-                {`\u20A6${(Number(l.menuItem.price) * l.quantity).toLocaleString()}`}
-              </Text>
-            </View>
-          ))}
-          <View className="border-t border-hairline mt-2 pt-3 flex-row justify-between">
-            <Text
-              className="text-text text-sm"
-              style={{ fontFamily: 'Inter_500Medium' }}
-            >
-              Subtotal
-            </Text>
-            <Text
-              className="text-text text-sm"
-              style={{ fontFamily: 'Inter_600SemiBold' }}
-            >
-              {`\u20A6${total.toLocaleString()}`}
-            </Text>
-          </View>
-          <View className="flex-row justify-between mt-1.5">
-            <View className="flex-row items-center gap-1.5">
-              <Icon name="check-circle" size={12} color="#16A34A" />
-              <Text
-                className="text-muted text-sm"
-                style={{ fontFamily: 'Inter_500Medium' }}
-              >
-                Drone delivery
-              </Text>
-            </View>
-            <Text
-              className="text-success text-sm"
-              style={{ fontFamily: 'Inter_600SemiBold' }}
-            >
-              Free
-            </Text>
-          </View>
+          {!isPackage
+            ? lines.map((l) => (
+                <View
+                  key={l.menuItem.id}
+                  className="flex-row justify-between py-1.5"
+                >
+                  <Text
+                    className="text-text text-sm flex-1 pr-2"
+                    style={{ fontFamily: 'Inter_500Medium' }}
+                    numberOfLines={1}
+                  >
+                    {`${l.menuItem.name} \u00D7 ${l.quantity}`}
+                  </Text>
+                  <Text
+                    className="text-muted text-sm"
+                    style={{ fontFamily: 'Inter_500Medium' }}
+                  >
+                    {formatNgn(Number(l.menuItem.price) * l.quantity)}
+                  </Text>
+                </View>
+              ))
+            : (
+              <View className="flex-row justify-between py-1.5">
+                <Text
+                  className="text-text text-sm flex-1"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  Drone courier service
+                </Text>
+                <Text
+                  className="text-muted text-sm"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  {formatNgn(totalNumeric)}
+                </Text>
+              </View>
+            )}
           <View className="border-t border-hairline mt-3 pt-3 flex-row justify-between">
             <Text
               className="text-text text-base"
@@ -247,7 +303,7 @@ export default function CheckoutScreen({ navigation, route }: Props) {
               className="text-text text-base"
               style={{ fontFamily: 'Inter_700Bold' }}
             >
-              {`\u20A6${total.toLocaleString()}`}
+              {formatNgn(totalNumeric)}
             </Text>
           </View>
         </Card>
@@ -267,7 +323,7 @@ export default function CheckoutScreen({ navigation, route }: Props) {
 
       <BottomBar>
         <Button
-          label={`Confirm \u00B7 \u20A6${total.toLocaleString()}`}
+          label={`Confirm & Pay \u00B7 ${formatNgn(totalNumeric)}`}
           onPress={place}
           loading={busy}
           fullWidth
