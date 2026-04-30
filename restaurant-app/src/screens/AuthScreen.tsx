@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSignIn } from '@clerk/clerk-expo';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Card, Button, Input } from '../ui';
 
 export default function AuthScreen() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -36,52 +31,92 @@ export default function AuthScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
-    >
-      <Text style={styles.title}>SkyServe Restaurant</Text>
-      <Text style={styles.subtitle}>Sign in to your restaurant account</Text>
+    <View className="flex-1 bg-bg">
+      <StatusBar style="light" />
+      <View className="bg-primary pt-16 pb-12 px-6 rounded-b-3xl">
+        <SafeAreaView edges={['top']}>
+          <Text
+            className="text-accent text-xs"
+            style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 2 }}
+          >
+            SKYSERVE FOR RESTAURANTS
+          </Text>
+          <Text
+            className="text-white text-3xl mt-2"
+            style={{ fontFamily: 'Inter_700Bold' }}
+          >
+            Run your kitchen,{'\n'}we handle delivery.
+          </Text>
+          <Text
+            className="text-white/80 text-sm mt-3"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            Accept orders, update status, and let drones do the running.
+          </Text>
+        </SafeAreaView>
+      </View>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <Text style={styles.label}>Password</Text>
-      <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Card padding="lg" className="-mt-8">
+            <Text
+              className="text-text text-xl mb-1"
+              style={{ fontFamily: 'Inter_700Bold' }}
+            >
+              Sign in
+            </Text>
+            <Text
+              className="text-muted text-sm mb-5"
+              style={{ fontFamily: 'Inter_400Regular' }}
+            >
+              Use your restaurant owner account.
+            </Text>
 
-      <TouchableOpacity onPress={handle} style={styles.btn} disabled={busy}>
-        {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sign in</Text>}
-      </TouchableOpacity>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </KeyboardAvoidingView>
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholder="owner@restaurant.com"
+              containerClassName="mb-4"
+            />
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+            />
+
+            <View className="mt-5">
+              <Button label="Sign in" onPress={handle} loading={busy} fullWidth />
+            </View>
+
+            {error ? (
+              <View className="bg-danger-soft rounded-md mt-4 px-3 py-2.5">
+                <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+                  {error}
+                </Text>
+              </View>
+            ) : null}
+          </Card>
+
+          <Text
+            className="text-subtle text-xs text-center mt-6"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            Need an account? Reach out to the SkyServe ops team.
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: '700', color: '#0f172a' },
-  subtitle: { color: '#64748b', marginBottom: 24 },
-  label: { color: '#475569', marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 6,
-    color: '#0f172a',
-  },
-  btn: {
-    marginTop: 24,
-    backgroundColor: '#0f172a',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  btnText: { color: '#fff', fontWeight: '600' },
-  error: { color: '#b91c1c', textAlign: 'center', marginTop: 12 },
-});

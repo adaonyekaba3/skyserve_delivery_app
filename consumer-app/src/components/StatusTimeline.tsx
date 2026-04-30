@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import type { OrderStatus } from '../services/types';
 
 const STAGES: OrderStatus[] = [
@@ -28,46 +28,74 @@ interface Props {
 export default function StatusTimeline({ status }: Props) {
   if (status === 'CANCELLED') {
     return (
-      <View style={styles.cancelled}>
-        <Text style={styles.cancelText}>Order cancelled</Text>
+      <View className="bg-danger-soft rounded-md p-4 items-center">
+        <Text className="text-danger text-base" style={{ fontFamily: 'Inter_600SemiBold' }}>
+          Order cancelled
+        </Text>
       </View>
     );
   }
+
   const currentIndex = STAGES.indexOf(status);
+
   return (
-    <View style={styles.list}>
+    <View>
       {STAGES.map((s, i) => {
         const reached = i <= currentIndex;
+        const isCurrent = i === currentIndex;
+        const isLast = i === STAGES.length - 1;
+
         return (
-          <View key={s} style={styles.row}>
-            <View style={[styles.dot, reached && styles.dotActive]} />
-            {i < STAGES.length - 1 ? (
-              <View style={[styles.line, reached && i < currentIndex && styles.lineActive]} />
-            ) : null}
-            <Text style={[styles.label, reached && styles.labelActive]}>{LABELS[s]}</Text>
+          <View key={s} className="flex-row" style={{ minHeight: 48 }}>
+            <View className="items-center mr-3" style={{ width: 24 }}>
+              <View
+                className={`h-5 w-5 rounded-full items-center justify-center ${
+                  reached ? 'bg-accent' : 'bg-hairline'
+                }`}
+              >
+                {reached ? (
+                  <View className="h-2 w-2 rounded-full bg-white" />
+                ) : null}
+              </View>
+              {!isLast ? (
+                <View
+                  className={`flex-1 w-0.5 my-0.5 ${
+                    i < currentIndex ? 'bg-accent' : 'bg-hairline'
+                  }`}
+                />
+              ) : null}
+            </View>
+            <View className="flex-1 pb-2">
+              <Text
+                className={`text-sm ${
+                  isCurrent
+                    ? 'text-primary'
+                    : reached
+                      ? 'text-text'
+                      : 'text-subtle'
+                }`}
+                style={{
+                  fontFamily: isCurrent
+                    ? 'Inter_700Bold'
+                    : reached
+                      ? 'Inter_600SemiBold'
+                      : 'Inter_500Medium',
+                }}
+              >
+                {LABELS[s]}
+              </Text>
+              {isCurrent ? (
+                <Text
+                  className="text-muted text-xs mt-0.5"
+                  style={{ fontFamily: 'Inter_400Regular' }}
+                >
+                  In progress
+                </Text>
+              ) : null}
+            </View>
           </View>
         );
       })}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  list: { padding: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', height: 36 },
-  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#cbd5e1' },
-  dotActive: { backgroundColor: '#16a34a' },
-  line: {
-    position: 'absolute',
-    left: 6,
-    top: 28,
-    width: 2,
-    height: 28,
-    backgroundColor: '#e2e8f0',
-  },
-  lineActive: { backgroundColor: '#16a34a' },
-  label: { marginLeft: 14, fontSize: 14, color: '#64748b' },
-  labelActive: { color: '#0f172a', fontWeight: '500' },
-  cancelled: { padding: 24, alignItems: 'center' },
-  cancelText: { color: '#b91c1c', fontWeight: '600' },
-});

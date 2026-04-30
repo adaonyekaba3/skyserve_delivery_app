@@ -5,6 +5,14 @@ import type { Drone, Order } from './types';
 export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 const DEV_BEARER = process.env.NEXT_PUBLIC_DEV_BEARER ?? 'dev-token';
 
+export interface AuthedUser {
+  sub: string;
+  dbUserId: string;
+  email: string;
+  role: 'ADMIN' | 'CUSTOMER' | 'RESTAURANT_OWNER' | 'OPERATIONS' | 'SUPPORT';
+  restaurantIds: string[];
+}
+
 async function authedFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const { getToken } = await auth();
   const token = (await getToken()) ?? DEV_BEARER;
@@ -29,4 +37,13 @@ export function fetchOrders() {
 
 export function fetchDrones() {
   return authedFetch<Drone[]>('/drones');
+}
+
+export async function fetchMe(): Promise<AuthedUser | null> {
+  try {
+    const data = await authedFetch<{ user: AuthedUser }>('/identity/me');
+    return data.user;
+  } catch {
+    return null;
+  }
 }

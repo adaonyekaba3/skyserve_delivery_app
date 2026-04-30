@@ -1,51 +1,68 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 import type { Order } from '../services/types';
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#f59e0b',
-  ACCEPTED: '#3b82f6',
-  PREPARING: '#8b5cf6',
-  PICKED_UP: '#0ea5e9',
-  IN_FLIGHT: '#0ea5e9',
-  DELIVERED: '#16a34a',
-  CANCELLED: '#dc2626',
-};
+import { Card, Badge, statusToBadge } from '../ui';
 
 interface Props {
   order: Order;
   onPress: () => void;
 }
 
-export default function OrderCard({ order, onPress }: Props) {
-  const color = STATUS_COLORS[order.status] ?? '#475569';
-  return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <View style={styles.row}>
-        <Text style={styles.id}>#{order.id.slice(0, 8)}</Text>
-        <View style={[styles.badge, { backgroundColor: color }]}>
-          <Text style={styles.badgeText}>{order.status}</Text>
-        </View>
-      </View>
-      <Text style={styles.address}>{order.deliveryAddress}</Text>
-      <Text style={styles.amount}>₦{Number(order.totalAmount).toLocaleString()}</Text>
-    </TouchableOpacity>
-  );
+function ageMinutes(iso: string): number {
+  const ts = new Date(iso).getTime();
+  if (Number.isNaN(ts)) return 0;
+  return Math.max(0, Math.round((Date.now() - ts) / 60000));
 }
 
-const styles = StyleSheet.create({
-  card: {
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  id: { fontWeight: '600', color: '#0f172a' },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  address: { color: '#64748b', marginTop: 6 },
-  amount: { color: '#0f172a', marginTop: 6, fontWeight: '500' },
-});
+export default function OrderCard({ order, onPress }: Props) {
+  const badge = statusToBadge(order.status);
+  const age = ageMinutes(order.createdAt);
+  const itemCount = order.items?.length ?? 0;
+
+  return (
+    <Card className="mb-3" onPress={onPress}>
+      <View className="flex-row items-start justify-between">
+        <View className="flex-1 pr-3">
+          <View className="flex-row items-center mb-1">
+            <Text
+              className="text-text text-base"
+              style={{ fontFamily: 'Inter_700Bold' }}
+            >
+              #{order.id.slice(0, 8)}
+            </Text>
+            <Text
+              className="text-subtle text-xs ml-2"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
+              {age === 0 ? 'just now' : `${age}m ago`}
+            </Text>
+          </View>
+          <Text
+            className="text-muted text-xs"
+            style={{ fontFamily: 'Inter_400Regular' }}
+            numberOfLines={1}
+          >
+            {order.deliveryAddress}
+          </Text>
+          {itemCount > 0 ? (
+            <Text
+              className="text-subtle text-xs mt-1"
+              style={{ fontFamily: 'Inter_400Regular' }}
+            >
+              {itemCount} item{itemCount > 1 ? 's' : ''}
+            </Text>
+          ) : null}
+        </View>
+        <View className="items-end">
+          <Text
+            className="text-text text-base mb-2"
+            style={{ fontFamily: 'Inter_700Bold' }}
+          >
+            {'\u20A6'}{Number(order.totalAmount).toLocaleString()}
+          </Text>
+          <Badge label={badge.label} tone={badge.tone} size="sm" />
+        </View>
+      </View>
+    </Card>
+  );
+}

@@ -170,7 +170,50 @@ Notes:
 - Both apps include `eas.json` with `development`, `preview`, and `production` profiles.
 - Keep secrets in EAS environment variables; only `EXPO_PUBLIC_*` values are bundled client-side.
 
-## 8) Frontend E2E tests (Admin dashboard)
+## 8) Clerk webhooks -> Neon user sync
+
+The backend exposes `POST /api/v1/identity/webhooks/clerk` which:
+
+- Verifies the `svix-id` / `svix-timestamp` / `svix-signature` headers when `CLERK_WEBHOOK_SECRET` is set.
+- On `user.created` and `user.updated`: upserts a row in `users` (by `clerk_user_id`), refreshing `email`, `full_name`, and `is_active=true`. The `role` column is preserved across updates so admin/owner role assignments survive Clerk profile edits.
+- On `user.deleted`: soft-deletes the row by setting `is_active=false` and tombstoning the email so re-signups don't collide with the unique index.
+
+### Production setup
+
+1. Deploy the backend (Vercel preview is enough to test).
+2. Open the Clerk Dashboard -> Webhooks -> "Add Endpoint".
+3. URL: `https://<your-deployment>/api/v1/identity/webhooks/clerk`.
+4. Subscribe to `user.created`, `user.updated`, `user.deleted`.
+5. Copy the signing secret (starts with `whsec_`) into Vercel env as `CLERK_WEBHOOK_SECRET` for both `preview` and `production`.
+
+### Local setup (with ngrok)
+
+```bash
+ngrok http 3000
+# copy https://<id>.ngrok-free.app
+```
+
+Then in Clerk Dashboard -> Webhooks add a second endpoint pointed at `https://<id>.ngrok-free.app/api/v1/identity/webhooks/clerk`, subscribe to the same three events, and copy the signing secret into your local `.env`:
+
+```bash
+CLERK_WEBHOOK_SECRET=whsec_...
+```
+
+Restart the backend (`npm run start:dev`) and create / edit / delete a user in Clerk to see Neon update in real time.
+
+### Local smoke (no Clerk dashboard required)
+
+A smoke script generates a fake event and round-trips it through the live route:
+
+```bash
+node scripts/test-clerk-webhook.mjs created  --email demo@skyserve.local
+node scripts/test-clerk-webhook.mjs updated  --email demo+2@skyserve.local --clerkId user_smoke_xxxx
+node scripts/test-clerk-webhook.mjs deleted  --clerkId user_smoke_xxxx
+```
+
+When `CLERK_WEBHOOK_SECRET` is set, the script also signs the body with the same svix algorithm Clerk uses; otherwise it falls back to an unsigned request that the dev server accepts because `NODE_ENV` is not `production`.
+
+## 9) Frontend E2E tests (Admin dashboard)
 
 ```bash
 cd admin-dashboard

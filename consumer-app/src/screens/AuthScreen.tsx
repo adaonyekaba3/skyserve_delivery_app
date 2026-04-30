@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Card, Button, Input, Icon } from '../ui';
 
 export default function AuthScreen() {
   const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn();
@@ -74,95 +68,159 @@ export default function AuthScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
-    >
-      <Text style={styles.title}>SkyServe</Text>
-      <Text style={styles.subtitle}>{mode === 'signin' ? 'Sign in' : 'Create account'}</Text>
-
-      {pendingVerification ? (
-        <>
-          <Text style={styles.label}>Email verification code</Text>
-          <TextInput
-            value={code}
-            onChangeText={setCode}
-            placeholder="123456"
-            style={styles.input}
-            keyboardType="number-pad"
-            autoCapitalize="none"
-          />
-          <TouchableOpacity onPress={handleVerify} style={styles.primaryBtn} disabled={busy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Verify</Text>}
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@example.com"
-            style={styles.input}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="********"
-            style={styles.input}
-            secureTextEntry
-          />
-
-          <TouchableOpacity
-            onPress={mode === 'signin' ? handleSignIn : handleSignUp}
-            style={styles.primaryBtn}
-            disabled={busy}
+    <View className="flex-1 bg-bg">
+      <StatusBar style="light" />
+      <View className="bg-primary pt-16 pb-12 px-6 rounded-b-3xl">
+        <SafeAreaView edges={['top']}>
+          <Text
+            className="text-accent text-xs tracking-widest"
+            style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 2 }}
           >
-            {busy ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.primaryText}>{mode === 'signin' ? 'Sign in' : 'Sign up'}</Text>
-            )}
-          </TouchableOpacity>
+            SKYSERVE
+          </Text>
+          <Text
+            className="text-white text-3xl mt-2"
+            style={{ fontFamily: 'Inter_700Bold' }}
+          >
+            Drone-fast delivery,{'\n'}from your favorites.
+          </Text>
+          <Text
+            className="text-white/80 text-sm mt-3"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            Sign in to start ordering in 10-15 minutes.
+          </Text>
+        </SafeAreaView>
+      </View>
 
-          <TouchableOpacity onPress={() => setMode((m) => (m === 'signin' ? 'signup' : 'signin'))}>
-            <Text style={styles.toggle}>
-              {mode === 'signin' ? 'Need an account? Sign up' : 'Have an account? Sign in'}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="flex-1"
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Card padding="lg" className="-mt-8">
+            <Text
+              className="text-text text-xl mb-1"
+              style={{ fontFamily: 'Inter_700Bold' }}
+            >
+              {pendingVerification
+                ? 'Verify your email'
+                : mode === 'signin'
+                  ? 'Welcome back'
+                  : 'Create account'}
             </Text>
-          </TouchableOpacity>
-        </>
-      )}
+            <Text
+              className="text-muted text-sm mb-5"
+              style={{ fontFamily: 'Inter_400Regular' }}
+            >
+              {pendingVerification
+                ? 'Enter the 6-digit code we sent to your email.'
+                : mode === 'signin'
+                  ? 'Sign in to your SkyServe account.'
+                  : 'Get started with SkyServe.'}
+            </Text>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </KeyboardAvoidingView>
+            {pendingVerification ? (
+              <>
+                <Input
+                  label="Verification code"
+                  value={code}
+                  onChangeText={setCode}
+                  placeholder="123456"
+                  keyboardType="number-pad"
+                  autoCapitalize="none"
+                />
+                <View className="mt-5">
+                  <Button label="Verify" onPress={handleVerify} loading={busy} fullWidth />
+                </View>
+              </>
+            ) : (
+              <>
+                <View className="flex-row p-1 rounded-full bg-cream mb-5">
+                  {(['signin', 'signup'] as const).map((m) => {
+                    const active = mode === m;
+                    return (
+                      <Pressable
+                        key={m}
+                        onPress={() => setMode(m)}
+                        className={`flex-1 py-2 rounded-full items-center ${
+                          active ? 'bg-accent' : 'bg-transparent'
+                        }`}
+                      >
+                        <Text
+                          className={`text-sm ${active ? 'text-primary' : 'text-muted'}`}
+                          style={{
+                            fontFamily: active ? 'Inter_700Bold' : 'Inter_500Medium',
+                          }}
+                        >
+                          {m === 'signin' ? 'Sign in' : 'Sign up'}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Input
+                  label="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  containerClassName="mb-4"
+                />
+                <Input
+                  label="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
+                  secureTextEntry
+                />
+                <View className="mt-5">
+                  <Button
+                    label={mode === 'signin' ? 'Sign in' : 'Sign up'}
+                    onPress={mode === 'signin' ? handleSignIn : handleSignUp}
+                    loading={busy}
+                    fullWidth
+                  />
+                </View>
+              </>
+            )}
+
+            {error ? (
+              <View className="bg-danger-soft rounded-md mt-4 px-3 py-2.5">
+                <Text
+                  className="text-danger text-sm"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  {error}
+                </Text>
+              </View>
+            ) : null}
+          </Card>
+
+          <Text
+            className="text-subtle text-xs text-center mt-6"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            By continuing, you agree to SkyServe's Terms and Privacy Policy.
+          </Text>
+
+          <View className="flex-row items-center justify-center gap-1.5 mt-3">
+            <Icon name="shield" size={12} color="#94A3B8" />
+            <Text
+              className="text-subtle text-xs text-center"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
+              Powered by Clerk
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 32, fontWeight: '700', marginBottom: 4, color: '#0f172a' },
-  subtitle: { fontSize: 16, color: '#475569', marginBottom: 24 },
-  label: { fontSize: 13, color: '#475569', marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 6,
-    fontSize: 16,
-    color: '#0f172a',
-  },
-  primaryBtn: {
-    backgroundColor: '#0f172a',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  toggle: { color: '#0f172a', textAlign: 'center', marginTop: 16, fontSize: 14 },
-  error: { color: '#b91c1c', marginTop: 16, textAlign: 'center' },
-});

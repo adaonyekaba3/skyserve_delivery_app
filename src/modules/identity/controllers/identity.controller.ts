@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  Req,
+} from '@nestjs/common';
+import type { RawBodyRequest } from '@nestjs/common';
+import type { Request } from 'express';
 import { Public } from '../guards/public.decorator';
 import { CurrentUser } from '../guards/current-user.decorator';
 import { IdentitySyncService } from '../application/identity-sync.service';
@@ -16,16 +26,29 @@ export class IdentityController {
   @Public()
   @Post('webhooks/clerk')
   async syncUser(
+    @Req() req: RawBodyRequest<Request>,
     @Body() payload: Record<string, unknown>,
     @Headers('svix-id') svixId?: string,
     @Headers('svix-timestamp') svixTimestamp?: string,
     @Headers('svix-signature') svixSignature?: string,
   ) {
-    await this.identitySyncService.syncFromWebhook(payload, {
-      svixId,
-      svixTimestamp,
-      svixSignature,
-    });
-    return { ok: true };
+    const rawBody = req.rawBody?.toString('utf8');
+    const inProduction = process.env.NODE_ENV === 'production';
+    const hasSecret = Boolean(process.env.CLERK_WEBHOOK_SECRET);
+
+    if (inProduction && (!svixId || !svixTimestamp || !svixSignature)) {
+      throw new BadRequestException('Clerk webhooks require svix headers in production');
+    }
+
+    if (hasSecret && !rawBody) {
+      throw new BadRequestException('Raw request body is required to verify svix signature');
+    }
+
+    const result = await this.identitySyncService.syncFromWebhook(
+      payload,
+      { svixId, svixTimestamp, svixSignature },
+      rawBody,
+    );
+    return { ok: true, result };
   }
 }

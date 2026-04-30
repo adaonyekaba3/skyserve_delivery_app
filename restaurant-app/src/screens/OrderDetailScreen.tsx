@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getOrder, patchOrderStatus } from '../services/api';
 import { useFeed } from '../store/feed';
-import type { Order, OrderStatus } from '../services/types';
-import type { RootStackParamList } from '../navigation/RootNavigator';
+import type { OrderStatus } from '../services/types';
+import {
+  Screen,
+  AppHeader,
+  Card,
+  Badge,
+  statusToBadge,
+  Button,
+  Loader,
+  EmptyState,
+} from '../ui';
+import type { OrdersStackParamList } from '../navigation/RootNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'OrderDetail'>;
+type Props = NativeStackScreenProps<OrdersStackParamList, 'OrderDetail'>;
 
 const ALLOWED_NEXT: Record<OrderStatus, OrderStatus[]> = {
   PENDING: ['ACCEPTED', 'CANCELLED'],
@@ -27,26 +30,48 @@ const ALLOWED_NEXT: Record<OrderStatus, OrderStatus[]> = {
 
 const LABELS: Record<OrderStatus, string> = {
   PENDING: 'Pending',
-  ACCEPTED: 'Accept',
+  ACCEPTED: 'Accept order',
   PREPARING: 'Mark preparing',
   PICKED_UP: 'Mark ready for pickup',
   IN_FLIGHT: 'In flight',
   DELIVERED: 'Delivered',
-  CANCELLED: 'Cancel',
+  CANCELLED: 'Cancel order',
 };
 
-export default function OrderDetailScreen({ route }: Props) {
+const STATUS_HEADLINE: Record<OrderStatus, string> = {
+  PENDING: 'New order \u2014 awaiting acceptance',
+  ACCEPTED: 'Accepted \u2014 start preparing',
+  PREPARING: 'Preparing the meal',
+  PICKED_UP: 'Ready for the drone',
+  IN_FLIGHT: 'On its way',
+  DELIVERED: 'Delivered',
+  CANCELLED: 'Cancelled',
+};
+
+export default function OrderDetailScreen({ route, navigation }: Props) {
   const { orderId } = route.params;
   const order = useFeed((s) => s.byId[orderId]);
   const upsert = useFeed((s) => s.upsert);
+  const [loading, setLoading] = useState(!order);
   const [busy, setBusy] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     getOrder(orderId)
-      .then((o) => active && upsert(o))
-      .catch((err) => active && setError((err as Error).message));
+      .then((o) => {
+        if (active) {
+          upsert(o);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          setError((err as Error).message);
+          setLoading(false);
+        }
+      });
     return () => {
       active = false;
     };
@@ -54,6 +79,7 @@ export default function OrderDetailScreen({ route }: Props) {
 
   const transition = async (next: OrderStatus) => {
     setBusy(true);
+    setPendingStatus(next);
     setError(null);
     try {
       const updated = await patchOrderStatus(orderId, next);
@@ -62,87 +88,144 @@ export default function OrderDetailScreen({ route }: Props) {
       setError((err as Error).message);
     } finally {
       setBusy(false);
+      setPendingStatus(null);
     }
   };
 
-  if (!order) {
+  if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
+      <Screen>
+        <AppHeader title="Order detail" showBack />
+        <Loader fullscreen label="Loading order..." />
+      </Screen>
     );
   }
 
-  const next = ALLOWED_NEXT[order.status as OrderStatus] ?? [];
+  if (!order) {
+    return (
+      <Screen>
+        <AppHeader title="Order detail" showBack />
+        <EmptyState
+          icon={'\u26A0\uFE0F'}
+          title="Order not found"
+          description={error ?? 'We could not load this order.'}
+          ctaLabel="Back"
+          onCta={() => navigation.canGoBack() && navigation.goBack()}
+        />
+      </Screen>
+    );
+  }
+
+  const status = order.status as OrderStatus;
+  const badge = statusToBadge(status);
+  const next = ALLOWED_NEXT[status] ?? [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      <Text style={styles.title}>Order #{order.id.slice(0, 8)}</Text>
-      <Text style={styles.label}>Status: {order.status}</Text>
-      <Text style={styles.label}>Address: {order.deliveryAddress}</Text>
-      <Text style={styles.label}>Total: ₦{Number(order.totalAmount).toLocaleString()}</Text>
+    <Screen edges={['top', 'left', 'right']}>
+      <AppHeader title={`#${order.id.slice(0, 8)}`} subtitle={STATUS_HEADLINE[status]} showBack />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Card padding="lg" className="mb-4 bg-primary border-primary">
+          <Badge label={badge.label} tone="gold" />
+          <Text
+            className="text-white text-2xl mt-2"
+            style={{ fontFamily: 'Inter_700Bold' }}
+          >
+            {STATUS_HEADLINE[status]}
+          </Text>
+          <Text
+            className="text-white/80 text-sm mt-1"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            Total {'\u20A6'}{Number(order.totalAmount).toLocaleString()}
+          </Text>
+        </Card>
 
-      {order.items?.length ? (
-        <View style={styles.itemsBox}>
-          <Text style={styles.itemsTitle}>Items</Text>
-          {order.items.map((item) => (
-            <View key={item.id} style={styles.itemRow}>
-              <Text style={styles.itemName}>
-                {item.nameSnapshot} × {item.quantity}
-              </Text>
-              <Text style={styles.itemPrice}>
-                ₦{(Number(item.unitPrice) * item.quantity).toLocaleString()}
-              </Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
+        <Card className="mb-4">
+          <Text
+            className="text-text text-base mb-2"
+            style={{ fontFamily: 'Inter_600SemiBold' }}
+          >
+            Delivery address
+          </Text>
+          <Text
+            className="text-muted text-sm"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            {order.deliveryAddress}
+          </Text>
+        </Card>
 
-      <View style={styles.actions}>
-        {next.length === 0 ? (
-          <Text style={styles.empty}>No further actions available.</Text>
-        ) : (
-          next.map((status) => (
-            <TouchableOpacity
-              key={status}
-              onPress={() => transition(status)}
-              style={[
-                styles.actionBtn,
-                status === 'CANCELLED' ? styles.cancelBtn : styles.primaryBtn,
-              ]}
-              disabled={busy}
+        {order.items?.length ? (
+          <Card className="mb-4">
+            <Text
+              className="text-text text-base mb-3"
+              style={{ fontFamily: 'Inter_600SemiBold' }}
             >
-              <Text style={styles.actionText}>{LABELS[status]}</Text>
-            </TouchableOpacity>
-          ))
-        )}
-      </View>
+              Items
+            </Text>
+            {order.items.map((item) => (
+              <View key={item.id} className="flex-row justify-between py-1.5">
+                <Text
+                  className="text-text text-sm flex-1 pr-2"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                  numberOfLines={1}
+                >
+                  {item.nameSnapshot} \u00D7 {item.quantity}
+                </Text>
+                <Text
+                  className="text-muted text-sm"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  {'\u20A6'}{(Number(item.unitPrice) * item.quantity).toLocaleString()}
+                </Text>
+              </View>
+            ))}
+          </Card>
+        ) : null}
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </ScrollView>
+        <Card className="mb-4">
+          <Text
+            className="text-text text-base mb-3"
+            style={{ fontFamily: 'Inter_600SemiBold' }}
+          >
+            Update status
+          </Text>
+          {next.length === 0 ? (
+            <Text
+              className="text-muted text-sm"
+              style={{ fontFamily: 'Inter_400Regular' }}
+            >
+              No further actions for orders in this state.
+            </Text>
+          ) : (
+            <View className="gap-2">
+              {next.map((s) => (
+                <Button
+                  key={s}
+                  label={LABELS[s]}
+                  onPress={() => transition(s)}
+                  variant={s === 'CANCELLED' ? 'danger' : 'primary'}
+                  loading={busy && pendingStatus === s}
+                  disabled={busy && pendingStatus !== s}
+                  fullWidth
+                />
+              ))}
+            </View>
+          )}
+        </Card>
+
+        {error ? (
+          <View className="bg-danger-soft rounded-md mt-2 px-3 py-2.5">
+            <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+              {error}
+            </Text>
+          </View>
+        ) : null}
+      </ScrollView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 22, fontWeight: '700', color: '#0f172a' },
-  label: { color: '#475569', marginTop: 8 },
-  itemsBox: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-  },
-  itemsTitle: { fontWeight: '600', color: '#0f172a', marginBottom: 6 },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  itemName: { color: '#0f172a' },
-  itemPrice: { color: '#475569' },
-  actions: { marginTop: 24 },
-  actionBtn: { paddingVertical: 14, borderRadius: 8, alignItems: 'center', marginBottom: 12 },
-  primaryBtn: { backgroundColor: '#0f172a' },
-  cancelBtn: { backgroundColor: '#fee2e2' },
-  actionText: { color: '#fff', fontWeight: '600' },
-  empty: { color: '#64748b' },
-  error: { color: '#b91c1c', marginTop: 16 },
-});

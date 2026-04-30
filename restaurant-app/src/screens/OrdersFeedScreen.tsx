@@ -1,27 +1,43 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, FlatList, RefreshControl, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useAuth } from '@clerk/clerk-expo';
 import { getMe, getRestaurantOrders } from '../services/api';
 import { subscribe, unsubscribe } from '../services/realtime';
 import { useFeed } from '../store/feed';
-import type { Order } from '../services/types';
+import type { Order, OrderStatus } from '../services/types';
 import OrderCard from '../components/OrderCard';
-import type { RootStackParamList } from '../navigation/RootNavigator';
+import {
+  Screen,
+  AppHeader,
+  CategoryPill,
+  EmptyState,
+  Card,
+  Skeleton,
+} from '../ui';
+import type { OrdersStackParamList } from '../navigation/RootNavigator';
 import { notifyOps } from '../services/notifications';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'OrdersFeed'>;
+type Props = NativeStackScreenProps<OrdersStackParamList, 'OrdersFeed'>;
+
+const FILTERS: Array<{ id: 'ALL' | OrderStatus; label: string }> = [
+  { id: 'ALL', label: 'All' },
+  { id: 'PENDING', label: 'Pending' },
+  { id: 'ACCEPTED', label: 'Accepted' },
+  { id: 'PREPARING', label: 'Preparing' },
+  { id: 'PICKED_UP', label: 'Picked up' },
+];
+
+function FeedSkeleton() {
+  return (
+    <Card className="mb-3">
+      <Skeleton width="40%" height={14} className="mb-2" />
+      <Skeleton width="80%" height={12} className="mb-2" />
+      <Skeleton width="30%" height={16} />
+    </Card>
+  );
+}
 
 export default function OrdersFeedScreen({ navigation }: Props) {
-  const { signOut } = useAuth();
   const orders = useFeed((s) => Object.values(s.byId));
   const setMany = useFeed((s) => s.setMany);
   const upsert = useFeed((s) => s.upsert);
@@ -29,6 +45,7 @@ export default function OrdersFeedScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'ALL' | OrderStatus>('ALL');
 
   const load = useCallback(
     async (rid: string) => {
@@ -78,7 +95,10 @@ export default function OrdersFeedScreen({ navigation }: Props) {
     if (!channel) return undefined;
     const handler = (payload: Order) => {
       upsert(payload);
-      void notifyOps('Restaurant order update', `Order #${payload.id.slice(0, 8)} is ${payload.status}`);
+      void notifyOps(
+        'Restaurant order update',
+        `Order #${payload.id.slice(0, 8)} is ${payload.status}`,
+      );
     };
     channel.bind('order_created', handler);
     channel.bind('order_status_updated', handler);
@@ -89,67 +109,84 @@ export default function OrdersFeedScreen({ navigation }: Props) {
     };
   }, [restaurantId, upsert]);
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  const sorted = useMemo(
+    () =>
+      [...orders]
+        .filter((o) => filter === 'ALL' || o.status === filter)
+        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+    [orders, filter],
+  );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Orders</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => navigation.navigate('RestaurantManage')}>
-            <Text style={styles.headerLink}>Manage</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => signOut()}>
-            <Text style={styles.headerLink}>Sign out</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <FlatList
-        data={[...orders].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))}
-        keyExtractor={(o) => o.id}
-        contentContainerStyle={{ padding: 16 }}
-        renderItem={({ item }) => (
-          <OrderCard
-            order={item}
-            onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}
-          />
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              if (!restaurantId) return;
-              setRefreshing(true);
-              load(restaurantId);
-            }}
-          />
-        }
-        ListEmptyComponent={<Text style={styles.empty}>No orders yet.</Text>}
+    <Screen edges={['top', 'left', 'right']}>
+      <AppHeader
+        title="Orders"
+        subtitle="Live restaurant feed"
+        variant="large"
       />
-    </View>
+
+      <View className="px-5 pb-3">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 4 }}
+        >
+          {FILTERS.map((f) => (
+            <CategoryPill
+              key={f.id}
+              label={f.label}
+              active={filter === f.id}
+              onPress={() => setFilter(f.id)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+
+      {loading ? (
+        <View className="px-5">
+          <FeedSkeleton />
+          <FeedSkeleton />
+          <FeedSkeleton />
+        </View>
+      ) : (
+        <FlatList
+          data={sorted}
+          keyExtractor={(o) => o.id}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+          renderItem={({ item }) => (
+            <OrderCard
+              order={item}
+              onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}
+            />
+          )}
+          refreshControl={
+            <RefreshControl
+              tintColor="#1E3A8A"
+              refreshing={refreshing}
+              onRefresh={() => {
+                if (!restaurantId) return;
+                setRefreshing(true);
+                load(restaurantId);
+              }}
+            />
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon={'\uD83D\uDCED'}
+              title="No orders yet"
+              description="Incoming orders will appear here in real time."
+            />
+          }
+        />
+      )}
+
+      {error ? (
+        <View className="bg-danger-soft rounded-md mx-5 mb-4 px-3 py-2.5">
+          <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+            {error}
+          </Text>
+        </View>
+      ) : null}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-  },
-  headerActions: { flexDirection: 'row', gap: 14 },
-  title: { fontSize: 24, fontWeight: '700', color: '#0f172a' },
-  headerLink: { color: '#64748b' },
-  error: { color: '#b91c1c', textAlign: 'center', padding: 12 },
-  empty: { textAlign: 'center', color: '#64748b', marginTop: 40 },
-});

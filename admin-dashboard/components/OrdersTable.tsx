@@ -5,6 +5,27 @@ import type { Order, OrderStatus } from '@/lib/types';
 import StatusFilter from './StatusFilter';
 import { subscribe, unsubscribe } from '@/lib/realtime';
 
+const STATUS_TONE: Record<OrderStatus, { bg: string; text: string; label: string }> = {
+  PENDING: { bg: 'bg-warning-soft', text: 'text-warning', label: 'Pending' },
+  ACCEPTED: { bg: 'bg-primary-soft', text: 'text-primary', label: 'Accepted' },
+  PREPARING: { bg: 'bg-primary-soft', text: 'text-primary', label: 'Preparing' },
+  PICKED_UP: { bg: 'bg-accent-soft', text: 'text-accent', label: 'Picked up' },
+  IN_FLIGHT: { bg: 'bg-accent-soft', text: 'text-accent', label: 'In flight' },
+  DELIVERED: { bg: 'bg-success-soft', text: 'text-success', label: 'Delivered' },
+  CANCELLED: { bg: 'bg-danger-soft', text: 'text-danger', label: 'Cancelled' },
+};
+
+function StatusBadge({ status }: { status: OrderStatus }) {
+  const tone = STATUS_TONE[status] ?? STATUS_TONE.PENDING;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone.bg} ${tone.text}`}
+    >
+      {tone.label}
+    </span>
+  );
+}
+
 export default function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL');
@@ -34,28 +55,42 @@ export default function OrdersTable({ initialOrders }: { initialOrders: Order[] 
   );
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">Orders</h2>
+    <div className="rounded-lg border border-border bg-surface p-5 shadow-card">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-text">Orders</h2>
+          <p className="text-xs text-muted">
+            {filtered.length} {filtered.length === 1 ? 'order' : 'orders'} \u00B7 live updates
+          </p>
+        </div>
+      </div>
       <StatusFilter value={filter} onChange={setFilter} />
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="text-slate-500">
-            <tr>
-              <th className="pb-2">Order</th>
-              <th className="pb-2">Status</th>
-              <th className="pb-2">Address</th>
-              <th className="pb-2">Amount</th>
-              <th className="pb-2">Updated</th>
+          <thead>
+            <tr className="border-b border-border text-xs uppercase tracking-wider text-subtle">
+              <th className="pb-3 pr-4 font-semibold">Order</th>
+              <th className="pb-3 pr-4 font-semibold">Status</th>
+              <th className="pb-3 pr-4 font-semibold">Address</th>
+              <th className="pb-3 pr-4 font-semibold">Amount</th>
+              <th className="pb-3 font-semibold">Updated</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((order) => (
-              <tr key={order.id} className="border-t border-slate-100">
-                <td className="py-2 font-medium text-slate-900">#{order.id.slice(0, 8)}</td>
-                <td className="py-2 text-slate-700">{order.status}</td>
-                <td className="py-2 text-slate-600">{order.deliveryAddress}</td>
-                <td className="py-2 text-slate-700">₦{Number(order.totalAmount).toLocaleString()}</td>
-                <td className="py-2 text-slate-500">
+              <tr
+                key={order.id}
+                className="border-b border-hairline last:border-b-0 transition-colors hover:bg-bg"
+              >
+                <td className="py-3 pr-4 font-semibold text-text">#{order.id.slice(0, 8)}</td>
+                <td className="py-3 pr-4">
+                  <StatusBadge status={order.status} />
+                </td>
+                <td className="py-3 pr-4 text-muted">{order.deliveryAddress}</td>
+                <td className="py-3 pr-4 font-semibold text-text">
+                  &#8358;{Number(order.totalAmount).toLocaleString()}
+                </td>
+                <td className="py-3 text-subtle">
                   {new Date(order.updatedAt).toLocaleTimeString()}
                 </td>
               </tr>
@@ -63,7 +98,11 @@ export default function OrdersTable({ initialOrders }: { initialOrders: Order[] 
           </tbody>
         </table>
         {filtered.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">No orders for this filter.</p>
+          <div className="py-10 text-center">
+            <p className="text-2xl">📭</p>
+            <p className="mt-2 text-sm font-medium text-text">No orders for this filter</p>
+            <p className="mt-1 text-xs text-muted">Try selecting a different status.</p>
+          </div>
         ) : null}
       </div>
     </div>

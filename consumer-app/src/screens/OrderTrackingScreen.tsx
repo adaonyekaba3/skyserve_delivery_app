@@ -1,27 +1,40 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Linking,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, Text, View, Linking, Alert } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAuth } from '@clerk/clerk-expo';
 import { getMe, getOrder, getRestaurant } from '../services/api';
-import type { Order, OrderStatus, Restaurant } from '../services/types';
+import type { OrderStatus, Restaurant } from '../services/types';
 import StatusTimeline from '../components/StatusTimeline';
 import DroneCanvas from '../components/DroneCanvas';
 import { useOrders } from '../store/orders';
 import { useOrderUpdates, useDroneTelemetry } from '../hooks/useOrderUpdates';
-import type { RootStackParamList } from '../navigation/RootNavigator';
+import {
+  Screen,
+  AppHeader,
+  Card,
+  Badge,
+  statusToBadge,
+  Loader,
+  Button,
+  EmptyState,
+  Icon,
+} from '../ui';
+import type { OrdersStackParamList } from '../navigation/RootNavigator';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'OrderTracking'>;
+type Props = NativeStackScreenProps<OrdersStackParamList, 'OrderTracking'>;
 const MAP_PROVIDER = process.env.EXPO_PUBLIC_MAP_PROVIDER ?? 'google';
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN ?? '';
+
+const STATUS_HEADLINE: Record<OrderStatus, string> = {
+  PENDING: 'We received your order',
+  ACCEPTED: 'Restaurant accepted',
+  PREPARING: 'Your meal is being prepared',
+  PICKED_UP: 'Drone has picked it up',
+  IN_FLIGHT: 'Your order is in flight',
+  DELIVERED: 'Delivered. Enjoy!',
+  CANCELLED: 'Order cancelled',
+};
 
 export default function OrderTrackingScreen({ route, navigation }: Props) {
   const { orderId } = route.params;
@@ -33,10 +46,16 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [drone, setDrone] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [droneMeta, setDroneMeta] = useState<{ id?: string; battery?: number; status?: string }>(
+    {},
+  );
 
   useEffect(() => {
     let active = true;
-    if (!isSignedIn) return undefined;
+    if (!isSignedIn) {
+      setLoading(false);
+      return undefined;
+    }
     Promise.all([getOrder(orderId), getMe()])
       .then(async ([orderData, me]) => {
         if (!active) return;
@@ -54,28 +73,40 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
 
   useOrderUpdates(userDbId);
   useDroneTelemetry(
-    useCallback((payload) => {
+    useCallback((payload: any) => {
       const lat = payload.currentLatitude ? Number(payload.currentLatitude) : null;
       const lon = payload.currentLongitude ? Number(payload.currentLongitude) : null;
       if (lat !== null && lon !== null) {
         setDrone({ latitude: lat, longitude: lon });
       }
+      setDroneMeta({
+        id: payload.droneId ?? payload.id,
+        battery: payload.batteryLevel ? Number(payload.batteryLevel) : undefined,
+        status: payload.droneStatus ?? payload.status,
+      });
     }, []),
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
+      <Screen>
+        <Loader fullscreen label="Loading order..." />
+      </Screen>
     );
   }
 
   if (!order) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error ?? 'Order not found'}</Text>
-      </View>
+      <Screen>
+        <AppHeader title="Order tracking" showBack />
+        <EmptyState
+          icon={<Icon name="alert-triangle" size={26} color="#D97706" />}
+          title="Order not found"
+          description={error ?? 'We could not load this order.'}
+          ctaLabel="Back"
+          onCta={() => navigation.canGoBack() && navigation.goBack()}
+        />
+      </Screen>
     );
   }
 
@@ -97,86 +128,212 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
     await Linking.openURL(MAP_PROVIDER === 'mapbox' ? mapboxUrl : googleUrl);
   };
 
+  const status = order.status as OrderStatus;
+  const badge = statusToBadge(status);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Order #{order.id.slice(0, 8)}</Text>
-        <Text style={styles.subtitle}>{restaurant?.name}</Text>
-        <Text style={styles.address}>{order.deliveryAddress}</Text>
-      </View>
-
-      {MAP_PROVIDER === 'none' || !origin || !destination ? (
-        <DroneCanvas
-          origin={origin}
-          destination={destination}
-          drone={drone}
-          status={order.status as OrderStatus}
-        />
-      ) : (
-        <View style={styles.mapWrap}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: origin.latitude,
-              longitude: origin.longitude,
-              latitudeDelta: 0.2,
-              longitudeDelta: 0.2,
-            }}
+    <Screen edges={['top', 'left', 'right']}>
+      <AppHeader title="Order tracking" subtitle={`#${order.id.slice(0, 8)}`} showBack />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Card padding="lg" className="mb-4 bg-primary border-primary">
+          <View className="flex-row items-center justify-between">
+            <Badge label={badge.label} tone="gold" />
+            {status === 'IN_FLIGHT' || status === 'PICKED_UP' ? (
+              <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-full bg-white/10">
+                <Icon
+                  name="navigation"
+                  size={12}
+                  color="#C6A052"
+                  style={{ transform: [{ rotate: '45deg' }] }}
+                />
+                <Text
+                  className="text-accent text-[11px]"
+                  style={{ fontFamily: 'Inter_600SemiBold' }}
+                >
+                  Drone live
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <Text
+            className="text-white text-2xl mt-3"
+            style={{ fontFamily: 'Inter_700Bold' }}
           >
-            <Marker coordinate={origin} title="Restaurant" />
-            <Marker coordinate={destination} title="Delivery point" />
-            {drone ? <Marker coordinate={drone} title="Drone" /> : null}
-            <Polyline coordinates={[origin, destination]} strokeWidth={3} strokeColor="#0ea5e9" />
-          </MapView>
-        </View>
-      )}
+            {STATUS_HEADLINE[status]}
+          </Text>
+          <View className="flex-row items-center gap-1.5 mt-1">
+            <Icon name="clock" size={12} color="rgba(255,255,255,0.8)" />
+            <Text
+              className="text-white/80 text-sm"
+              style={{ fontFamily: 'Inter_400Regular' }}
+            >
+              {`ETA ${status === 'DELIVERED' ? '0' : '8\u201312'} minutes`}
+            </Text>
+          </View>
+          {restaurant ? (
+            <Text
+              className="text-white/70 text-xs mt-3"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
+              From {restaurant.name}
+            </Text>
+          ) : null}
+          <Text
+            className="text-white/70 text-xs mt-1"
+            style={{ fontFamily: 'Inter_500Medium' }}
+          >
+            To {order.deliveryAddress}
+          </Text>
+        </Card>
 
-      <Text style={styles.section}>Status</Text>
-      <StatusTimeline status={order.status as OrderStatus} />
+        <Card className="mb-4">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text
+              className="text-text text-base"
+              style={{ fontFamily: 'Inter_600SemiBold' }}
+            >
+              Drone telemetry
+            </Text>
+            <Badge
+              label={droneMeta.status ?? 'IDLE'}
+              tone={droneMeta.status === 'IN_FLIGHT' ? 'gold' : 'neutral'}
+              size="sm"
+            />
+          </View>
+          <View className="flex-row gap-4">
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5">
+                <Icon name="cpu" size={12} color="#64748B" />
+                <Text
+                  className="text-muted text-xs"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  Drone ID
+                </Text>
+              </View>
+              <Text
+                className="text-text text-sm mt-1"
+                style={{ fontFamily: 'Inter_600SemiBold' }}
+              >
+                {droneMeta.id ? droneMeta.id.slice(0, 8) : '---'}
+              </Text>
+            </View>
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5">
+                <Icon name="battery" size={12} color="#64748B" />
+                <Text
+                  className="text-muted text-xs"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  Battery
+                </Text>
+              </View>
+              <Text
+                className="text-text text-sm mt-1"
+                style={{ fontFamily: 'Inter_600SemiBold' }}
+              >
+                {droneMeta.battery !== undefined ? `${Math.round(droneMeta.battery)}%` : '--%'}
+              </Text>
+              <View className="mt-1.5 h-1 rounded-full bg-hairline overflow-hidden">
+                <View
+                  className="h-full bg-accent"
+                  style={{
+                    width: `${Math.max(0, Math.min(100, droneMeta.battery ?? 0))}%`,
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        </Card>
 
-      <TouchableOpacity onPress={openExternalMap} style={styles.btn}>
-        <Text style={styles.btnText}>
-          Open in {MAP_PROVIDER === 'mapbox' ? 'Mapbox' : 'Google Maps'}
-        </Text>
-      </TouchableOpacity>
+        <Card className="mb-4" padding="md">
+          <Text
+            className="text-text text-base mb-3"
+            style={{ fontFamily: 'Inter_600SemiBold' }}
+          >
+            Live location
+          </Text>
+          {MAP_PROVIDER === 'none' || !origin || !destination ? (
+            <DroneCanvas origin={origin} destination={destination} drone={drone} status={status} />
+          ) : (
+            <View
+              className="rounded-lg overflow-hidden border border-border"
+              style={{ height: 220 }}
+            >
+              <MapView
+                style={{ flex: 1 }}
+                initialRegion={{
+                  latitude: origin.latitude,
+                  longitude: origin.longitude,
+                  latitudeDelta: 0.2,
+                  longitudeDelta: 0.2,
+                }}
+              >
+                <Marker coordinate={origin} title="Restaurant" />
+                <Marker coordinate={destination} title="Delivery point" />
+                {drone ? <Marker coordinate={drone} title="Drone" /> : null}
+                <Polyline coordinates={[origin, destination]} strokeWidth={3} strokeColor="#C6A052" />
+              </MapView>
+            </View>
+          )}
+          <View className="flex-row gap-2 mt-3">
+            <View className="flex-1">
+              <Button
+                label="Map"
+                onPress={openExternalMap}
+                variant="secondary"
+                size="sm"
+                icon={<Icon name="map" size={14} color="#0B1C2C" />}
+                fullWidth
+              />
+            </View>
+            <View className="flex-1">
+              <Button
+                label="Support"
+                onPress={() =>
+                  Alert.alert(
+                    'Concierge support',
+                    'Tap call to reach a SkyServe agent.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Call',
+                        onPress: () => Linking.openURL('tel:+2348000000000'),
+                      },
+                    ],
+                  )
+                }
+                variant="ghost"
+                size="sm"
+                icon={<Icon name="phone" size={14} color="#0B1C2C" />}
+                fullWidth
+              />
+            </View>
+          </View>
+        </Card>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Restaurants')} style={styles.btn}>
-        <Text style={styles.btnText}>Back to restaurants</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <Card>
+          <Text
+            className="text-text text-base mb-3"
+            style={{ fontFamily: 'Inter_600SemiBold' }}
+          >
+            Status timeline
+          </Text>
+          <StatusTimeline status={status} />
+        </Card>
+
+        {error ? (
+          <View className="bg-danger-soft rounded-md mt-4 px-3 py-2.5">
+            <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+              {error}
+            </Text>
+          </View>
+        ) : null}
+      </ScrollView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  title: { fontSize: 22, fontWeight: '700', color: '#0f172a' },
-  subtitle: { fontSize: 14, color: '#475569', marginTop: 4 },
-  address: { fontSize: 13, color: '#64748b', marginTop: 4 },
-  section: {
-    fontSize: 14,
-    color: '#475569',
-    paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: -8,
-    fontWeight: '600',
-  },
-  mapWrap: {
-    margin: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  map: { width: '100%', height: 220 },
-  btn: {
-    margin: 16,
-    paddingVertical: 12,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  btnText: { color: '#0f172a' },
-  error: { color: '#b91c1c' },
-});

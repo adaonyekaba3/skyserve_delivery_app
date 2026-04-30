@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Icon } from '../ui';
 
 interface Props {
   origin: { latitude: number; longitude: number } | null;
@@ -8,35 +9,70 @@ interface Props {
   status: string;
 }
 
-/**
- * Simple 2D canvas using positioned views: shows restaurant (origin),
- * customer (destination), and the drone marker as a percentage between
- * the two coordinates. No external map library.
- */
 export default function DroneCanvas({ origin, destination, drone, status }: Props) {
   const progress = computeProgress(origin, destination, drone);
 
   return (
-    <View style={styles.box}>
-      <View style={styles.track}>
-        <View style={[styles.marker, styles.originMarker]}>
-          <Text style={styles.markerText}>R</Text>
+    <View>
+      <View
+        className="bg-primary-soft rounded-lg overflow-hidden"
+        style={{ height: 96 }}
+      >
+        <View
+          className="absolute left-0 top-1/2 h-0.5 bg-primary/30"
+          style={{ width: '100%' }}
+        />
+        <View
+          className="absolute top-1/2 h-1 bg-accent rounded-full"
+          style={{ width: `${Math.round(progress * 100)}%` }}
+        />
+        <View
+          className="absolute h-9 w-9 rounded-full bg-primary items-center justify-center top-3 left-3"
+        >
+          <Text className="text-white text-[10px]" style={{ fontFamily: 'Inter_700Bold' }}>
+            REST
+          </Text>
         </View>
-        <View style={[styles.marker, styles.destinationMarker]}>
-          <Text style={styles.markerText}>You</Text>
+        <View
+          className="absolute h-9 w-9 rounded-full bg-accent items-center justify-center top-3 right-3"
+        >
+          <Text className="text-text text-[10px]" style={{ fontFamily: 'Inter_700Bold' }}>
+            YOU
+          </Text>
         </View>
-        <View style={[styles.drone, { left: `${progress * 100}%` }]}>
-          <Text style={styles.droneEmoji}>UAV</Text>
+        <View
+          className="absolute h-10 w-10 rounded-full bg-white border-2 border-primary items-center justify-center"
+          style={{ top: 8, left: `${progress * 100}%`, transform: [{ translateX: -20 }] }}
+        >
+          <Icon
+            name="navigation"
+            size={18}
+            color="#0B1C2C"
+            style={{ transform: [{ rotate: '45deg' }] }}
+          />
         </View>
       </View>
-      <View style={styles.metaRow}>
-        <Text style={styles.meta}>Status: {status}</Text>
+      <View className="mt-3">
+        <Text
+          className="text-text text-sm"
+          style={{ fontFamily: 'Inter_600SemiBold' }}
+        >
+          Status: {status}
+        </Text>
         {drone ? (
-          <Text style={styles.meta}>
-            {drone.latitude.toFixed(4)}, {drone.longitude.toFixed(4)}
+          <Text
+            className="text-muted text-xs mt-1"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            Position: {drone.latitude.toFixed(4)}, {drone.longitude.toFixed(4)}
           </Text>
         ) : (
-          <Text style={styles.meta}>Awaiting drone telemetry…</Text>
+          <Text
+            className="text-muted text-xs mt-1"
+            style={{ fontFamily: 'Inter_400Regular' }}
+          >
+            Awaiting drone telemetry...
+          </Text>
         )}
       </View>
     </View>
@@ -56,7 +92,10 @@ function computeProgress(
   return Math.max(0, Math.min(1, ratio));
 }
 
-function haversine(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
+function haversine(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+) {
   const R = 6371;
   const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
   const dLon = ((b.longitude - a.longitude) * Math.PI) / 180;
@@ -66,41 +105,3 @@ function haversine(a: { latitude: number; longitude: number }, b: { latitude: nu
     Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
   return 2 * R * Math.asin(Math.sqrt(x));
 }
-
-const styles = StyleSheet.create({
-  box: { padding: 16 },
-  track: {
-    height: 80,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 12,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  marker: {
-    position: 'absolute',
-    top: 28,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  originMarker: { left: 4 },
-  destinationMarker: { right: 4 },
-  markerText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  drone: {
-    position: 'absolute',
-    top: 12,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#16a34a',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ translateX: -18 }],
-  },
-  droneEmoji: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  metaRow: { marginTop: 12 },
-  meta: { color: '#475569', fontSize: 13, marginTop: 2 },
-});

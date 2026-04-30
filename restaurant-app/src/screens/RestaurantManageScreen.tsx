@@ -1,15 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { View, Text, FlatList, Switch, Image, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import MapView, { Marker } from 'react-native-maps';
 import {
@@ -22,6 +12,16 @@ import {
   updateRestaurant,
 } from '../services/api';
 import type { MenuItem, Restaurant } from '../services/types';
+import {
+  Screen,
+  AppHeader,
+  Card,
+  Button,
+  Input,
+  Loader,
+  Badge,
+  EmptyState,
+} from '../ui';
 
 const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME ?? '';
 const CLOUDINARY_UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? '';
@@ -33,27 +33,16 @@ async function uploadImageAsync(uri: string): Promise<string> {
       'Image upload disabled: set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET, then restart Expo.',
     );
   }
-
   const form = new FormData();
-  form.append('file', {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    uri,
-    name: 'menu-item.jpg',
-    type: 'image/jpeg',
-  } as any);
+  form.append('file', { uri, name: 'menu-item.jpg', type: 'image/jpeg' } as any);
   form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-    method: 'POST',
-    body: form,
-  });
-  if (!res.ok) {
-    throw new Error('Image upload failed');
-  }
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    { method: 'POST', body: form },
+  );
+  if (!res.ok) throw new Error('Image upload failed');
   const json = (await res.json()) as { secure_url?: string };
-  if (!json.secure_url) {
-    throw new Error('Image upload returned no URL');
-  }
+  if (!json.secure_url) throw new Error('Image upload returned no URL');
   return json.secure_url;
 }
 
@@ -208,186 +197,259 @@ export default function RestaurantManageScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
+      <Screen>
+        <AppHeader title="Manage" variant="large" />
+        <Loader fullscreen label="Loading restaurant..." />
+      </Screen>
     );
   }
 
   return (
-    <FlatList
-      data={menu}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-      ListHeaderComponent={
-        <View>
-          <Text style={styles.heading}>Restaurant profile</Text>
-          <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-          <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} />
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.half]}
-              placeholder="Latitude"
-              value={latitude}
-              onChangeText={setLatitude}
-            />
-            <TextInput
-              style={[styles.input, styles.half]}
-              placeholder="Longitude"
-              value={longitude}
-              onChangeText={setLongitude}
-            />
-          </View>
-
-          {restaurant ? (
-            <View style={styles.mapWrap}>
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                  latitude: Number(restaurant.latitude),
-                  longitude: Number(restaurant.longitude),
-                  latitudeDelta: 0.08,
-                  longitudeDelta: 0.08,
-                }}
+    <Screen edges={['top', 'left', 'right']}>
+      <AppHeader title="Manage" subtitle="Restaurant profile and menu" variant="large" />
+      <FlatList
+        data={menu}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
+        ListHeaderComponent={
+          <View>
+            <Card className="mb-4">
+              <Text
+                className="text-text text-base mb-3"
+                style={{ fontFamily: 'Inter_600SemiBold' }}
               >
-                <Marker
-                  coordinate={{
-                    latitude: Number(restaurant.latitude),
-                    longitude: Number(restaurant.longitude),
-                  }}
-                  title={restaurant.name}
+                Restaurant profile
+              </Text>
+              <Input label="Name" value={name} onChangeText={setName} containerClassName="mb-3" />
+              <Input
+                label="Address"
+                value={address}
+                onChangeText={setAddress}
+                containerClassName="mb-3"
+              />
+              <View className="flex-row gap-2 mb-3">
+                <View className="flex-1">
+                  <Input label="Latitude" value={latitude} onChangeText={setLatitude} />
+                </View>
+                <View className="flex-1">
+                  <Input label="Longitude" value={longitude} onChangeText={setLongitude} />
+                </View>
+              </View>
+
+              {restaurant && Number(restaurant.latitude) && Number(restaurant.longitude) ? (
+                <View
+                  className="rounded-lg overflow-hidden border border-border mb-3"
+                  style={{ height: 160 }}
+                >
+                  <MapView
+                    style={{ flex: 1 }}
+                    initialRegion={{
+                      latitude: Number(restaurant.latitude),
+                      longitude: Number(restaurant.longitude),
+                      latitudeDelta: 0.08,
+                      longitudeDelta: 0.08,
+                    }}
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: Number(restaurant.latitude),
+                        longitude: Number(restaurant.longitude),
+                      }}
+                      title={restaurant.name}
+                    />
+                  </MapView>
+                </View>
+              ) : null}
+
+              <Button
+                label="Save restaurant"
+                onPress={saveRestaurant}
+                loading={busy}
+                fullWidth
+              />
+            </Card>
+
+            <Card className="mb-4">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text
+                  className="text-text text-base"
+                  style={{ fontFamily: 'Inter_600SemiBold' }}
+                >
+                  {editingMenuId ? 'Edit menu item' : 'New menu item'}
+                </Text>
+                {editingMenuId ? (
+                  <Pressable onPress={resetMenuForm} hitSlop={8}>
+                    <Text
+                      className="text-primary text-sm"
+                      style={{ fontFamily: 'Inter_500Medium' }}
+                    >
+                      Cancel
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+
+              <Input
+                label="Item name"
+                value={itemName}
+                onChangeText={setItemName}
+                containerClassName="mb-3"
+              />
+              <Input
+                label="Price"
+                placeholder="4500.00"
+                value={itemPrice}
+                onChangeText={setItemPrice}
+                keyboardType="decimal-pad"
+                containerClassName="mb-3"
+              />
+              <Input
+                label="Description"
+                value={itemDescription}
+                onChangeText={setItemDescription}
+                multiline
+                style={{ minHeight: 60, textAlignVertical: 'top' }}
+                containerClassName="mb-3"
+              />
+              <Input
+                label="Image URL"
+                value={itemImageUrl}
+                onChangeText={setItemImageUrl}
+                placeholder="Or upload below"
+                autoCapitalize="none"
+                containerClassName="mb-2"
+              />
+              <Button
+                label={CLOUDINARY_ENABLED ? 'Pick / upload image' : 'Image upload disabled'}
+                onPress={pickImage}
+                variant="secondary"
+                size="sm"
+                disabled={busy || !CLOUDINARY_ENABLED}
+                fullWidth
+              />
+              {!CLOUDINARY_ENABLED ? (
+                <Text
+                  className="text-subtle text-xs mt-2"
+                  style={{ fontFamily: 'Inter_400Regular' }}
+                >
+                  Set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET in
+                  restaurant-app/.env to enable image upload.
+                </Text>
+              ) : null}
+              {itemImageUrl ? (
+                <Image
+                  source={{ uri: itemImageUrl }}
+                  style={{ width: '100%', height: 160, borderRadius: 12, marginTop: 12 }}
+                  resizeMode="cover"
                 />
-              </MapView>
+              ) : null}
+              <View className="flex-row items-center justify-between mt-3 mb-2">
+                <Text
+                  className="text-text text-sm"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  Available for ordering
+                </Text>
+                <Switch value={itemAvailable} onValueChange={setItemAvailable} />
+              </View>
+              <Button
+                label={editingMenuId ? 'Update item' : 'Create item'}
+                onPress={saveMenuItem}
+                loading={busy}
+                fullWidth
+              />
+            </Card>
+
+            {error ? (
+              <View className="bg-danger-soft rounded-md mb-4 px-3 py-2.5">
+                <Text
+                  className="text-danger text-sm"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  {error}
+                </Text>
+              </View>
+            ) : null}
+
+            <Text
+              className="text-text text-base mb-2"
+              style={{ fontFamily: 'Inter_700Bold' }}
+            >
+              Current menu
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <Card className="mb-3" padding="md">
+            <View className="flex-row items-center">
+              {item.imageUrl ? (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={{ width: 56, height: 56, borderRadius: 10, marginRight: 12 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View
+                  className="bg-hairline rounded-md items-center justify-center mr-3"
+                  style={{ width: 56, height: 56 }}
+                >
+                  <Text className="text-base">{'\uD83C\uDF7D'}</Text>
+                </View>
+              )}
+              <View className="flex-1">
+                <Text
+                  className="text-text text-base"
+                  style={{ fontFamily: 'Inter_600SemiBold' }}
+                  numberOfLines={1}
+                >
+                  {item.name}
+                </Text>
+                <Text
+                  className="text-muted text-xs mt-0.5"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
+                  {'\u20A6'}{Number(item.price).toLocaleString()}
+                </Text>
+                <View className="mt-1">
+                  <Badge
+                    label={item.isAvailable ? 'Available' : 'Unavailable'}
+                    tone={item.isAvailable ? 'success' : 'neutral'}
+                    size="sm"
+                  />
+                </View>
+              </View>
             </View>
-          ) : null}
-
-          <TouchableOpacity style={styles.primaryBtn} onPress={saveRestaurant} disabled={busy}>
-            <Text style={styles.primaryText}>Save restaurant</Text>
-          </TouchableOpacity>
-
-          <Text style={[styles.heading, { marginTop: 24 }]}>Menu item</Text>
-          <TextInput style={styles.input} placeholder="Item name" value={itemName} onChangeText={setItemName} />
-          <TextInput style={styles.input} placeholder="Price (e.g. 4500.00)" value={itemPrice} onChangeText={setItemPrice} />
-          <TextInput
-            style={styles.input}
-            placeholder="Description"
-            value={itemDescription}
-            onChangeText={setItemDescription}
+            <View className="flex-row gap-2 mt-3">
+              <View className="flex-1">
+                <Button
+                  label="Edit"
+                  onPress={() => editMenuItem(item)}
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  label="Delete"
+                  onPress={() => removeMenuItem(item.id)}
+                  variant="danger"
+                  size="sm"
+                  disabled={busy}
+                  fullWidth
+                />
+              </View>
+            </View>
+          </Card>
+        )}
+        ListEmptyComponent={
+          <EmptyState
+            icon={'\uD83C\uDF7D'}
+            title="No menu items yet"
+            description="Add your first menu item using the form above."
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Image URL (auto-filled if upload works)"
-            value={itemImageUrl}
-            onChangeText={setItemImageUrl}
-          />
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={pickImage}
-            disabled={busy || !CLOUDINARY_ENABLED}
-          >
-            <Text style={styles.secondaryText}>
-              {CLOUDINARY_ENABLED ? 'Pick/upload image' : 'Image upload disabled'}
-            </Text>
-          </TouchableOpacity>
-          {!CLOUDINARY_ENABLED ? (
-            <Text style={styles.hint}>
-              Set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET in
-              restaurant-app/.env to enable image upload.
-            </Text>
-          ) : null}
-          {itemImageUrl ? <Image source={{ uri: itemImageUrl }} style={styles.preview} /> : null}
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Available</Text>
-            <Switch value={itemAvailable} onValueChange={setItemAvailable} />
-          </View>
-          <TouchableOpacity style={styles.primaryBtn} onPress={saveMenuItem} disabled={busy}>
-            <Text style={styles.primaryText}>{editingMenuId ? 'Update item' : 'Create item'}</Text>
-          </TouchableOpacity>
-          {editingMenuId ? (
-            <TouchableOpacity style={styles.secondaryBtn} onPress={resetMenuForm} disabled={busy}>
-              <Text style={styles.secondaryText}>Cancel edit</Text>
-            </TouchableOpacity>
-          ) : null}
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Text style={[styles.heading, { marginTop: 24 }]}>Current menu</Text>
-        </View>
-      }
-      renderItem={({ item }) => (
-        <View style={styles.card}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemMeta}>₦{Number(item.price).toLocaleString()}</Text>
-            <Text style={styles.itemMeta}>{item.isAvailable ? 'Available' : 'Unavailable'}</Text>
-          </View>
-          <TouchableOpacity onPress={() => editMenuItem(item)} style={styles.smallBtn}>
-            <Text style={styles.smallText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => removeMenuItem(item.id)} style={styles.smallDangerBtn}>
-            <Text style={styles.smallText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      ListEmptyComponent={<Text style={styles.itemMeta}>No menu items yet.</Text>}
-    />
+        }
+      />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  heading: { fontSize: 20, fontWeight: '700', color: '#0f172a', marginBottom: 10 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: '#fff',
-    marginBottom: 10,
-  },
-  row: { flexDirection: 'row', gap: 8 },
-  half: { flex: 1 },
-  mapWrap: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  map: { height: 180, width: '100%' },
-  primaryBtn: {
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  primaryText: { color: '#fff', fontWeight: '600' },
-  secondaryBtn: {
-    backgroundColor: '#e2e8f0',
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  secondaryText: { color: '#0f172a', fontWeight: '500' },
-  preview: { width: '100%', height: 180, borderRadius: 12, marginBottom: 10 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  label: { color: '#334155', fontWeight: '500' },
-  hint: { color: '#64748b', fontSize: 12, marginBottom: 8 },
-  error: { color: '#b91c1c', marginBottom: 8 },
-  card: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  itemName: { fontWeight: '600', color: '#0f172a' },
-  itemMeta: { color: '#64748b' },
-  smallBtn: { backgroundColor: '#e2e8f0', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8 },
-  smallDangerBtn: { backgroundColor: '#fecaca', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8 },
-  smallText: { color: '#0f172a', fontSize: 12, fontWeight: '600' },
-});
