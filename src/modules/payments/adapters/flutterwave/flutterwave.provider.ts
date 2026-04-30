@@ -10,7 +10,9 @@ import {
 export class FlutterwaveProvider implements PaymentProviderPort {
   readonly name = 'FLUTTERWAVE' as const;
 
-  async initialize(input: InitializePaymentInput): Promise<InitializePaymentResult> {
+  async initialize(
+    input: InitializePaymentInput,
+  ): Promise<InitializePaymentResult> {
     return {
       providerRef: `flw_${input.orderId}`,
       authorizationUrl: `${input.callbackUrl}?provider=flutterwave`,

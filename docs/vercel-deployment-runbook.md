@@ -50,6 +50,7 @@ vercel env add DATABASE_URL production --value "$NEW_VALUE" --yes
 ```
 
 Notes:
+
 - `DrizzleService.onModuleInit()` throws `Error: DATABASE_URL is required` at startup; missing this in any environment causes `500: FUNCTION_INVOCATION_FAILED` on first request.
 - Auth/payment modules do not throw at startup, so a preview can boot with only `DATABASE_URL` set; calls into Clerk/Paystack/Flutterwave will return runtime errors until their secrets are provisioned.
 - Keep callback/webhook URLs separately scoped for preview and production.
@@ -70,6 +71,7 @@ Vercel **Deployment Protection** is enabled, so plain `curl` against any preview
 3. (Optional, when needed) `npx vercel logs <deployment-id> --no-follow` is free of `Error: DATABASE_URL is required` or other startup throws.
 
 To run a deeper smoke that traverses the SSO wall, either:
+
 - Generate a Vercel **Protection Bypass for Automation** token in the project settings and pass it as `x-vercel-protection-bypass: <token>` (and `x-vercel-set-bypass-cookie: true`) on `curl`.
 - Or temporarily disable Deployment Protection for testing and re-enable afterwards.
 

@@ -145,8 +145,7 @@ export default function HomeScreen(_props: Props) {
   const [category, setCategory] = useState('All');
   const [location, setLocation] = useState('Ikoyi');
 
-  const firstName =
-    user?.firstName ?? (DEV_AUTH_BYPASS ? 'Adaobi' : 'there');
+  const firstName = user?.firstName ?? (DEV_AUTH_BYPASS ? 'Adaobi' : 'there');
   const greeting = greetingFor(new Date().getHours());
 
   const load = useCallback(async () => {
@@ -171,8 +170,7 @@ export default function HomeScreen(_props: Props) {
     if (!q) return items;
     return items.filter(
       (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.address.toLowerCase().includes(q),
+        r.name.toLowerCase().includes(q) || r.address.toLowerCase().includes(q),
     );
   }, [items, search]);
 
@@ -185,7 +183,8 @@ export default function HomeScreen(_props: Props) {
       .filter((r): r is Restaurant => Boolean(r));
     return ordered.length > 0 ? ordered : filtered.slice(0, 5);
   }, [filtered, recentIds]);
-  const hasRecents = recentIds.length > 0 && recommended.some((r) => recentIds.includes(r.id));
+  const hasRecents =
+    recentIds.length > 0 && recommended.some((r) => recentIds.includes(r.id));
 
   const notifyMeWhenLive = useCallback(() => {
     Alert.alert(
@@ -200,9 +199,7 @@ export default function HomeScreen(_props: Props) {
         location={location}
         onLocationChange={setLocation}
         onProfilePress={() =>
-          navigation
-            .getParent()
-            ?.navigate('AccountTab', { screen: 'Account' })
+          navigation.getParent()?.navigate('AccountTab', { screen: 'Account' })
         }
         greeting={greeting}
         firstName={firstName}

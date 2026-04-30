@@ -62,7 +62,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           placeholderTextColor="#94A3B8"
           className={`flex-1 text-text ${className}`}
           style={[
-            { fontFamily: 'Inter_400Regular', fontSize: 15, paddingVertical: 12 },
+            {
+              fontFamily: 'Inter_400Regular',
+              fontSize: 15,
+              paddingVertical: 12,
+            },
             (rest as any).style,
           ]}
         />

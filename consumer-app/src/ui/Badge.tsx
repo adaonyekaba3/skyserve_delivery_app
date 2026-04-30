@@ -29,12 +29,19 @@ const toneText: Record<Tone, string> = {
   gold: 'text-accent',
 };
 
-export function Badge({ label, tone = 'neutral', size = 'md', className = '' }: BadgeProps) {
+export function Badge({
+  label,
+  tone = 'neutral',
+  size = 'md',
+  className = '',
+}: BadgeProps) {
   const padClass = size === 'sm' ? 'px-2 py-0.5' : 'px-2.5 py-1';
   const textSize = size === 'sm' ? 'text-[11px]' : 'text-xs';
 
   return (
-    <View className={`${toneBg[tone]} ${padClass} rounded-full self-start ${className}`}>
+    <View
+      className={`${toneBg[tone]} ${padClass} rounded-full self-start ${className}`}
+    >
       <Text
         className={`${toneText[tone]} ${textSize} font-semi`}
         style={{ fontFamily: 'Inter_600SemiBold' }}
@@ -45,7 +52,10 @@ export function Badge({ label, tone = 'neutral', size = 'md', className = '' }: 
   );
 }
 
-export function statusToBadge(status: OrderStatus): { label: string; tone: Tone } {
+export function statusToBadge(status: OrderStatus): {
+  label: string;
+  tone: Tone;
+} {
   switch (status) {
     case 'PENDING':
       return { label: 'Pending', tone: 'warning' };

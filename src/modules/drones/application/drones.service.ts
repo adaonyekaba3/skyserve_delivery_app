@@ -34,7 +34,13 @@ export class DronesService {
       throw new NotFoundException(`Drone ${code} not found`);
     }
 
-    await this.pusherService.trigger('drones', 'drone_location_updated', updated);
+    await Promise.all([
+      this.pusherService.trigger('drones', 'drone_location_updated', updated),
+      this.pusherService.trigger('private-admin', 'drone_changed', {
+        type: 'telemetry',
+        drone: updated,
+      }),
+    ]);
     return updated;
   }
 }

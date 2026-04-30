@@ -8,7 +8,13 @@ interface LocationDropdownProps {
   className?: string;
 }
 
-const DEFAULT_OPTIONS = ['Ikoyi', 'Victoria Island', 'Lekki Phase 1', 'Yaba', 'Surulere'];
+const DEFAULT_OPTIONS = [
+  'Ikoyi',
+  'Victoria Island',
+  'Lekki Phase 1',
+  'Yaba',
+  'Surulere',
+];
 
 export function LocationDropdown({
   value,
@@ -46,7 +52,10 @@ export function LocationDropdown({
           className="flex-1 bg-black/40 justify-end"
           onPress={() => setOpen(false)}
         >
-          <Pressable className="bg-surface rounded-t-xl p-4 pb-8" onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            className="bg-surface rounded-t-xl p-4 pb-8"
+            onPress={(e) => e.stopPropagation()}
+          >
             <Text
               className="text-text text-base font-bold mb-3"
               style={{ fontFamily: 'Inter_700Bold' }}
@@ -69,12 +78,16 @@ export function LocationDropdown({
                   <Text
                     className={`text-base ${active ? 'text-primary' : 'text-text'}`}
                     style={{
-                      fontFamily: active ? 'Inter_600SemiBold' : 'Inter_400Regular',
+                      fontFamily: active
+                        ? 'Inter_600SemiBold'
+                        : 'Inter_400Regular',
                     }}
                   >
                     {opt}
                   </Text>
-                  {active ? <Text className="text-primary">{'\u2713'}</Text> : null}
+                  {active ? (
+                    <Text className="text-primary">{'\u2713'}</Text>
+                  ) : null}
                 </Pressable>
               );
             })}

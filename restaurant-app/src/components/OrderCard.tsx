@@ -58,7 +58,8 @@ export default function OrderCard({ order, onPress }: Props) {
             className="text-text text-base mb-2"
             style={{ fontFamily: 'Inter_700Bold' }}
           >
-            {'\u20A6'}{Number(order.totalAmount).toLocaleString()}
+            {'\u20A6'}
+            {Number(order.totalAmount).toLocaleString()}
           </Text>
           <Badge label={badge.label} tone={badge.tone} size="sm" />
         </View>

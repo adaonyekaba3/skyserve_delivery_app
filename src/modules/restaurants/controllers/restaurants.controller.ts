@@ -35,6 +35,18 @@ class CreateRestaurantDto {
 
   @IsNumberString()
   longitude!: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 class UpdateRestaurantDto {
@@ -53,6 +65,23 @@ class UpdateRestaurantDto {
   @IsOptional()
   @IsNumberString()
   longitude?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+
+class SetActiveDto {
+  @IsBoolean()
+  isActive!: boolean;
 }
 
 class CreateMenuItemDto {
@@ -151,8 +180,30 @@ export class RestaurantsController {
   }
 
   @Roles(Role.ADMIN, Role.OPERATIONS, Role.RESTAURANT_OWNER)
+  @Patch(':id/active')
+  setActive(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: SetActiveDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.restaurantsService.setActive(user, id, dto.isActive);
+  }
+
+  @Roles(Role.ADMIN, Role.OPERATIONS, Role.RESTAURANT_OWNER)
+  @Get(':id/performance')
+  getPerformance(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.restaurantsService.getPerformance(user, id);
+  }
+
+  @Roles(Role.ADMIN, Role.OPERATIONS, Role.RESTAURANT_OWNER)
   @Post('menu')
-  createMenuItem(@Body() dto: CreateMenuItemDto, @CurrentUser() user: AuthenticatedUser) {
+  createMenuItem(
+    @Body() dto: CreateMenuItemDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.restaurantsService.createMenuItem(user, dto);
   }
 

@@ -7,8 +7,12 @@ export default function SignInPage() {
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
           <span className="text-xl font-bold text-accent">S</span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">SkyServe Admin</h1>
-        <p className="mt-1 text-sm text-muted">Sign in to your operator account</p>
+        <h1 className="text-2xl font-bold tracking-tight text-text">
+          SkyServe Admin
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          Sign in to your operator account
+        </p>
       </div>
       <SignIn
         appearance={{

@@ -80,7 +80,10 @@ export default function CheckoutScreen({ navigation, route }: Props) {
       const order = await createOrder({
         restaurantId: route.params.restaurantId,
         deliveryAddress: address.trim(),
-        items: lines.map((l) => ({ menuItemId: l.menuItem.id, quantity: l.quantity })),
+        items: lines.map((l) => ({
+          menuItemId: l.menuItem.id,
+          quantity: l.quantity,
+        })),
       });
       const init = await initializePayment({
         orderId: order.id,
@@ -104,7 +107,11 @@ export default function CheckoutScreen({ navigation, route }: Props) {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Checkout" subtitle="Confirm your delivery and payment" showBack />
+      <AppHeader
+        title="Checkout"
+        subtitle="Confirm your delivery and payment"
+        showBack
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 200 }}
@@ -140,7 +147,9 @@ export default function CheckoutScreen({ navigation, route }: Props) {
                 key={p.id}
                 onPress={() => setProvider(p.id)}
                 className={`flex-row items-center p-3 rounded-lg border mb-2 ${
-                  active ? 'border-primary bg-primary-soft' : 'border-border bg-surface'
+                  active
+                    ? 'border-primary bg-primary-soft'
+                    : 'border-border bg-surface'
                 }`}
               >
                 <View className="h-9 w-9 rounded-full bg-cream items-center justify-center mr-3">
@@ -165,7 +174,9 @@ export default function CheckoutScreen({ navigation, route }: Props) {
                     active ? 'bg-primary' : 'border-2 border-border'
                   }`}
                 >
-                  {active ? <Icon name="check" size={12} color="#FFFFFF" /> : null}
+                  {active ? (
+                    <Icon name="check" size={12} color="#FFFFFF" />
+                  ) : null}
                 </View>
               </Pressable>
             );
@@ -175,7 +186,10 @@ export default function CheckoutScreen({ navigation, route }: Props) {
         <Card padding="lg">
           <SectionHeader icon="file-text" label="Order summary" />
           {lines.map((l) => (
-            <View key={l.menuItem.id} className="flex-row justify-between py-1.5">
+            <View
+              key={l.menuItem.id}
+              className="flex-row justify-between py-1.5"
+            >
               <Text
                 className="text-text text-sm flex-1 pr-2"
                 style={{ fontFamily: 'Inter_500Medium' }}
@@ -192,29 +206,47 @@ export default function CheckoutScreen({ navigation, route }: Props) {
             </View>
           ))}
           <View className="border-t border-hairline mt-2 pt-3 flex-row justify-between">
-            <Text className="text-text text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+            <Text
+              className="text-text text-sm"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
               Subtotal
             </Text>
-            <Text className="text-text text-sm" style={{ fontFamily: 'Inter_600SemiBold' }}>
+            <Text
+              className="text-text text-sm"
+              style={{ fontFamily: 'Inter_600SemiBold' }}
+            >
               {`\u20A6${total.toLocaleString()}`}
             </Text>
           </View>
           <View className="flex-row justify-between mt-1.5">
             <View className="flex-row items-center gap-1.5">
               <Icon name="check-circle" size={12} color="#16A34A" />
-              <Text className="text-muted text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+              <Text
+                className="text-muted text-sm"
+                style={{ fontFamily: 'Inter_500Medium' }}
+              >
                 Drone delivery
               </Text>
             </View>
-            <Text className="text-success text-sm" style={{ fontFamily: 'Inter_600SemiBold' }}>
+            <Text
+              className="text-success text-sm"
+              style={{ fontFamily: 'Inter_600SemiBold' }}
+            >
               Free
             </Text>
           </View>
           <View className="border-t border-hairline mt-3 pt-3 flex-row justify-between">
-            <Text className="text-text text-base" style={{ fontFamily: 'Inter_700Bold' }}>
+            <Text
+              className="text-text text-base"
+              style={{ fontFamily: 'Inter_700Bold' }}
+            >
               Total
             </Text>
-            <Text className="text-text text-base" style={{ fontFamily: 'Inter_700Bold' }}>
+            <Text
+              className="text-text text-base"
+              style={{ fontFamily: 'Inter_700Bold' }}
+            >
               {`\u20A6${total.toLocaleString()}`}
             </Text>
           </View>
@@ -223,7 +255,10 @@ export default function CheckoutScreen({ navigation, route }: Props) {
         {error ? (
           <View className="bg-danger-soft rounded-md mt-4 px-3 py-2.5 flex-row items-center gap-2">
             <Icon name="alert-triangle" size={14} color="#DC2626" />
-            <Text className="text-danger text-sm flex-1" style={{ fontFamily: 'Inter_500Medium' }}>
+            <Text
+              className="text-danger text-sm flex-1"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
               {error}
             </Text>
           </View>

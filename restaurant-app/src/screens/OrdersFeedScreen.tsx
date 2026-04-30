@@ -156,7 +156,9 @@ export default function OrdersFeedScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <OrderCard
               order={item}
-              onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}
+              onPress={() =>
+                navigation.navigate('OrderDetail', { orderId: item.id })
+              }
             />
           )}
           refreshControl={
@@ -182,7 +184,10 @@ export default function OrdersFeedScreen({ navigation }: Props) {
 
       {error ? (
         <View className="bg-danger-soft rounded-md mx-5 mb-4 px-3 py-2.5">
-          <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+          <Text
+            className="text-danger text-sm"
+            style={{ fontFamily: 'Inter_500Medium' }}
+          >
             {error}
           </Text>
         </View>

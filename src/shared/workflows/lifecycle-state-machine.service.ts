@@ -19,17 +19,21 @@ export type DeliveryStatus =
 
 @Injectable()
 export class LifecycleStateMachineService {
-  private readonly allowedOrderTransitions: Record<OrderStatus, OrderStatus[]> = {
-    PENDING: ['ACCEPTED', 'CANCELLED'],
-    ACCEPTED: ['PREPARING', 'CANCELLED'],
-    PREPARING: ['PICKED_UP', 'CANCELLED'],
-    PICKED_UP: ['IN_FLIGHT'],
-    IN_FLIGHT: ['DELIVERED'],
-    DELIVERED: [],
-    CANCELLED: [],
-  };
+  private readonly allowedOrderTransitions: Record<OrderStatus, OrderStatus[]> =
+    {
+      PENDING: ['ACCEPTED', 'CANCELLED'],
+      ACCEPTED: ['PREPARING', 'CANCELLED'],
+      PREPARING: ['PICKED_UP', 'CANCELLED'],
+      PICKED_UP: ['IN_FLIGHT'],
+      IN_FLIGHT: ['DELIVERED'],
+      DELIVERED: [],
+      CANCELLED: [],
+    };
 
-  private readonly allowedDeliveryTransitions: Record<DeliveryStatus, DeliveryStatus[]> = {
+  private readonly allowedDeliveryTransitions: Record<
+    DeliveryStatus,
+    DeliveryStatus[]
+  > = {
     ASSIGNED: ['PICKED_UP', 'FAILED', 'CANCELLED'],
     PICKED_UP: ['IN_FLIGHT', 'FAILED'],
     IN_FLIGHT: ['DELIVERED', 'FAILED'],
@@ -42,7 +46,9 @@ export class LifecycleStateMachineService {
     if (current === next) return;
     const allowed = this.allowedOrderTransitions[current] ?? [];
     if (!allowed.includes(next)) {
-      throw new ConflictException(`Invalid order transition: ${current} -> ${next}`);
+      throw new ConflictException(
+        `Invalid order transition: ${current} -> ${next}`,
+      );
     }
   }
 
@@ -50,7 +56,9 @@ export class LifecycleStateMachineService {
     if (current === next) return;
     const allowed = this.allowedDeliveryTransitions[current] ?? [];
     if (!allowed.includes(next)) {
-      throw new ConflictException(`Invalid delivery transition: ${current} -> ${next}`);
+      throw new ConflictException(
+        `Invalid delivery transition: ${current} -> ${next}`,
+      );
     }
   }
 }

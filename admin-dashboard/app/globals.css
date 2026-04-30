@@ -6,7 +6,7 @@
   html,
   body {
     height: 100%;
-    background: #f9fafb;
+    background: #f8f5f0;
     color: #0f172a;
     font-family: var(--font-inter), system-ui, sans-serif;
   }
@@ -19,4 +19,5 @@
 .leaflet-container {
   height: 100%;
   width: 100%;
+  background: #f8f5f0;
 }

@@ -60,7 +60,8 @@ export default function MenuItemRow({ menuItem, inCart, onAdd }: Props) {
           className="text-text text-sm mt-1.5"
           style={{ fontFamily: 'Inter_700Bold' }}
         >
-          {'\u20A6'}{Number(menuItem.price).toLocaleString()}
+          {'\u20A6'}
+          {Number(menuItem.price).toLocaleString()}
         </Text>
       </View>
 

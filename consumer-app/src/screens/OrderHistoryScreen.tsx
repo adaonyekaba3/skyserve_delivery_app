@@ -32,23 +32,27 @@ function formatDate(iso: string) {
   }
 }
 
-function bucketFor(iso: string): 'Today' | 'Yesterday' | 'Earlier this week' | 'Earlier' {
+function bucketFor(
+  iso: string,
+): 'Today' | 'Yesterday' | 'Earlier this week' | 'Earlier' {
   const created = new Date(iso);
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
   const dayMs = 24 * 60 * 60 * 1000;
   if (created >= startOfToday) return 'Today';
   if (created >= new Date(startOfToday.getTime() - dayMs)) return 'Yesterday';
-  if (created >= new Date(startOfToday.getTime() - 6 * dayMs)) return 'Earlier this week';
+  if (created >= new Date(startOfToday.getTime() - 6 * dayMs))
+    return 'Earlier this week';
   return 'Earlier';
 }
 
-const BUCKET_ORDER: Array<'Today' | 'Yesterday' | 'Earlier this week' | 'Earlier'> = [
-  'Today',
-  'Yesterday',
-  'Earlier this week',
-  'Earlier',
-];
+const BUCKET_ORDER: Array<
+  'Today' | 'Yesterday' | 'Earlier this week' | 'Earlier'
+> = ['Today', 'Yesterday', 'Earlier this week', 'Earlier'];
 
 const TONE_DOT: Record<string, string> = {
   primary: '#0B1C2C',
@@ -224,7 +228,10 @@ export default function OrderHistoryScreen({ navigation }: Props) {
       {error ? (
         <View className="bg-danger-soft rounded-md mx-5 mb-4 px-3 py-2.5 flex-row items-center gap-2">
           <Icon name="alert-triangle" size={14} color="#DC2626" />
-          <Text className="text-danger text-sm flex-1" style={{ fontFamily: 'Inter_500Medium' }}>
+          <Text
+            className="text-danger text-sm flex-1"
+            style={{ fontFamily: 'Inter_500Medium' }}
+          >
             {error}
           </Text>
         </View>

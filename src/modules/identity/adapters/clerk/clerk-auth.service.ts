@@ -44,7 +44,10 @@ export class ClerkAuthService {
   }
 
   private isDevToken(token: string): boolean {
-    if (process.env.ALLOW_DEV_TOKEN !== 'true' && process.env.NODE_ENV === 'production') {
+    if (
+      process.env.ALLOW_DEV_TOKEN !== 'true' &&
+      process.env.NODE_ENV === 'production'
+    ) {
       return false;
     }
     return token === DEV_BEARER;
@@ -80,24 +83,33 @@ export class ClerkAuthService {
     };
   }
 
-  private async verifyClerkJwt(token: string): Promise<{ sub?: string; email?: string }> {
+  private async verifyClerkJwt(
+    token: string,
+  ): Promise<{ sub?: string; email?: string }> {
     const secretKey = process.env.CLERK_SECRET_KEY;
     if (!secretKey) {
       throw new UnauthorizedException('CLERK_SECRET_KEY is not configured');
     }
     try {
-      const claims = (await verifyToken(token, { secretKey })) as Record<string, unknown>;
+      const claims = (await verifyToken(token, { secretKey })) as Record<
+        string,
+        unknown
+      >;
       return {
         sub: typeof claims.sub === 'string' ? claims.sub : undefined,
         email:
           typeof claims.email === 'string'
             ? claims.email
-            : typeof (claims.email_address ?? claims.primary_email_address) === 'string'
-              ? ((claims.email_address ?? claims.primary_email_address) as string)
+            : typeof (claims.email_address ?? claims.primary_email_address) ===
+                'string'
+              ? ((claims.email_address ??
+                  claims.primary_email_address) as string)
               : undefined,
       };
     } catch (err) {
-      throw new UnauthorizedException(`Invalid Clerk token: ${(err as Error).message}`);
+      throw new UnauthorizedException(
+        `Invalid Clerk token: ${(err as Error).message}`,
+      );
     }
   }
 

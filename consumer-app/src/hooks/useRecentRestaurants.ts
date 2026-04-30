@@ -17,7 +17,9 @@ export function useRecentRestaurants(limit = 5): string[] {
   return useMemo(() => {
     const seen = new Set<string>();
     const ordered: string[] = [];
-    const sorted = [...orders].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    const sorted = [...orders].sort((a, b) =>
+      a.createdAt < b.createdAt ? 1 : -1,
+    );
     for (const o of sorted) {
       if (!seen.has(o.restaurantId)) {
         seen.add(o.restaurantId);

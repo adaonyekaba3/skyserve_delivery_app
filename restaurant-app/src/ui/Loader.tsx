@@ -7,7 +7,11 @@ interface LoaderProps {
   className?: string;
 }
 
-export function Loader({ label, fullscreen = false, className = '' }: LoaderProps) {
+export function Loader({
+  label,
+  fullscreen = false,
+  className = '',
+}: LoaderProps) {
   return (
     <View
       className={`items-center justify-center ${

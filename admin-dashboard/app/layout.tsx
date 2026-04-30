@@ -16,11 +16,17 @@ export const metadata: Metadata = {
   description: 'Operator dashboard for SkyServe drone delivery',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ClerkProvider>
       <html lang="en" className={inter.variable}>
-        <body className="min-h-screen bg-bg text-text font-sans">{children}</body>
+        <body className="min-h-screen bg-bg text-text font-sans">
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );

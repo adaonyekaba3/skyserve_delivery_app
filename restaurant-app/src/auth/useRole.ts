@@ -30,7 +30,9 @@ export function useRole(): UseRoleResult {
       const me = await getMe();
       setUser(me);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? err?.message ?? 'Failed to load user');
+      setError(
+        err?.response?.data?.message ?? err?.message ?? 'Failed to load user',
+      );
       setUser(null);
     } finally {
       setLoading(false);

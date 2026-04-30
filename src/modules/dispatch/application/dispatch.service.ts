@@ -3,9 +3,15 @@ import { LifecycleStateMachineService } from 'src/shared/workflows/lifecycle-sta
 
 @Injectable()
 export class DispatchService {
-  constructor(private readonly lifecycleStateMachine: LifecycleStateMachineService) {}
+  constructor(
+    private readonly lifecycleStateMachine: LifecycleStateMachineService,
+  ) {}
 
-  validateDispatchableOrder(status: Parameters<LifecycleStateMachineService['assertValidOrderTransition']>[0]) {
+  validateDispatchableOrder(
+    status: Parameters<
+      LifecycleStateMachineService['assertValidOrderTransition']
+    >[0],
+  ) {
     this.lifecycleStateMachine.assertValidOrderTransition(status, 'ACCEPTED');
     return { ok: true };
   }

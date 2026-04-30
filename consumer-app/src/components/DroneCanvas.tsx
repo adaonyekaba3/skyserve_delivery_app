@@ -9,7 +9,12 @@ interface Props {
   status: string;
 }
 
-export default function DroneCanvas({ origin, destination, drone, status }: Props) {
+export default function DroneCanvas({
+  origin,
+  destination,
+  drone,
+  status,
+}: Props) {
   const progress = computeProgress(origin, destination, drone);
 
   return (
@@ -26,23 +31,29 @@ export default function DroneCanvas({ origin, destination, drone, status }: Prop
           className="absolute top-1/2 h-1 bg-accent rounded-full"
           style={{ width: `${Math.round(progress * 100)}%` }}
         />
-        <View
-          className="absolute h-9 w-9 rounded-full bg-primary items-center justify-center top-3 left-3"
-        >
-          <Text className="text-white text-[10px]" style={{ fontFamily: 'Inter_700Bold' }}>
+        <View className="absolute h-9 w-9 rounded-full bg-primary items-center justify-center top-3 left-3">
+          <Text
+            className="text-white text-[10px]"
+            style={{ fontFamily: 'Inter_700Bold' }}
+          >
             REST
           </Text>
         </View>
-        <View
-          className="absolute h-9 w-9 rounded-full bg-accent items-center justify-center top-3 right-3"
-        >
-          <Text className="text-text text-[10px]" style={{ fontFamily: 'Inter_700Bold' }}>
+        <View className="absolute h-9 w-9 rounded-full bg-accent items-center justify-center top-3 right-3">
+          <Text
+            className="text-text text-[10px]"
+            style={{ fontFamily: 'Inter_700Bold' }}
+          >
             YOU
           </Text>
         </View>
         <View
           className="absolute h-10 w-10 rounded-full bg-white border-2 border-primary items-center justify-center"
-          style={{ top: 8, left: `${progress * 100}%`, transform: [{ translateX: -20 }] }}
+          style={{
+            top: 8,
+            left: `${progress * 100}%`,
+            transform: [{ translateX: -20 }],
+          }}
         >
           <Icon
             name="navigation"
@@ -102,6 +113,7 @@ function haversine(
   const lat1 = (a.latitude * Math.PI) / 180;
   const lat2 = (b.latitude * Math.PI) / 180;
   const x =
-    Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+    Math.sin(dLat / 2) ** 2 +
+    Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
   return 2 * R * Math.asin(Math.sqrt(x));
 }

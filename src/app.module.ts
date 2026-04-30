@@ -12,6 +12,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { OperatorModule } from './modules/operator/operator.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { DronesModule } from './modules/drones/drones.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { CartModule } from './modules/cart/cart.module';
 import { DatabaseModule } from './shared/database/database.module';
 import { RealtimeModule } from './shared/realtime/realtime.module';
 
@@ -36,6 +38,8 @@ import { RealtimeModule } from './shared/realtime/realtime.module';
     OperatorModule,
     AuditModule,
     DronesModule,
+    AdminModule,
+    CartModule,
   ],
 })
 export class AppModule {}

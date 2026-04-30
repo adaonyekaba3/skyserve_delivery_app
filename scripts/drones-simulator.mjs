@@ -59,13 +59,18 @@ async function tick() {
     }
     for (const row of active) {
       const targetLat = Number(row.delivery_latitude ?? rand(6.42, 6.62));
-      const targetLng = Number(row.delivery_longitude ?? rand(3.30, 3.50));
-      const currentLat = row.current_latitude ? Number(row.current_latitude) : rand(6.42, 6.62);
-      const currentLng = row.current_longitude ? Number(row.current_longitude) : rand(3.30, 3.50);
+      const targetLng = Number(row.delivery_longitude ?? rand(3.3, 3.5));
+      const currentLat = row.current_latitude
+        ? Number(row.current_latitude)
+        : rand(6.42, 6.62);
+      const currentLng = row.current_longitude
+        ? Number(row.current_longitude)
+        : rand(3.3, 3.5);
       const nextLat = stepToward(currentLat, targetLat);
       const nextLng = stepToward(currentLng, targetLng);
       const delivered =
-        Math.abs(targetLat - nextLat) < 0.0002 && Math.abs(targetLng - nextLng) < 0.0002;
+        Math.abs(targetLat - nextLat) < 0.0002 &&
+        Math.abs(targetLng - nextLng) < 0.0002;
 
       await patchDrone(row.drone_code, {
         status: delivered ? 'IDLE' : 'DELIVERING',

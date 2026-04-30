@@ -23,9 +23,13 @@ import {
   EmptyState,
 } from '../ui';
 
-const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME ?? '';
-const CLOUDINARY_UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? '';
-const CLOUDINARY_ENABLED = Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET);
+const CLOUDINARY_CLOUD_NAME =
+  process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME ?? '';
+const CLOUDINARY_UPLOAD_PRESET =
+  process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? '';
+const CLOUDINARY_ENABLED = Boolean(
+  CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET,
+);
 
 async function uploadImageAsync(uri: string): Promise<string> {
   if (!CLOUDINARY_ENABLED) {
@@ -34,7 +38,11 @@ async function uploadImageAsync(uri: string): Promise<string> {
     );
   }
   const form = new FormData();
-  form.append('file', { uri, name: 'menu-item.jpg', type: 'image/jpeg' } as any);
+  form.append('file', {
+    uri,
+    name: 'menu-item.jpg',
+    type: 'image/jpeg',
+  } as any);
   form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -99,7 +107,12 @@ export default function RestaurantManageScreen() {
     setBusy(true);
     setError(null);
     try {
-      const updated = await updateRestaurant(restaurantId, { name, address, latitude, longitude });
+      const updated = await updateRestaurant(restaurantId, {
+        name,
+        address,
+        latitude,
+        longitude,
+      });
       setRestaurant(updated);
     } catch (err) {
       setError((err as Error).message);
@@ -206,7 +219,11 @@ export default function RestaurantManageScreen() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Manage" subtitle="Restaurant profile and menu" variant="large" />
+      <AppHeader
+        title="Manage"
+        subtitle="Restaurant profile and menu"
+        variant="large"
+      />
       <FlatList
         data={menu}
         keyExtractor={(item) => item.id}
@@ -220,7 +237,12 @@ export default function RestaurantManageScreen() {
               >
                 Restaurant profile
               </Text>
-              <Input label="Name" value={name} onChangeText={setName} containerClassName="mb-3" />
+              <Input
+                label="Name"
+                value={name}
+                onChangeText={setName}
+                containerClassName="mb-3"
+              />
               <Input
                 label="Address"
                 value={address}
@@ -229,14 +251,24 @@ export default function RestaurantManageScreen() {
               />
               <View className="flex-row gap-2 mb-3">
                 <View className="flex-1">
-                  <Input label="Latitude" value={latitude} onChangeText={setLatitude} />
+                  <Input
+                    label="Latitude"
+                    value={latitude}
+                    onChangeText={setLatitude}
+                  />
                 </View>
                 <View className="flex-1">
-                  <Input label="Longitude" value={longitude} onChangeText={setLongitude} />
+                  <Input
+                    label="Longitude"
+                    value={longitude}
+                    onChangeText={setLongitude}
+                  />
                 </View>
               </View>
 
-              {restaurant && Number(restaurant.latitude) && Number(restaurant.longitude) ? (
+              {restaurant &&
+              Number(restaurant.latitude) &&
+              Number(restaurant.longitude) ? (
                 <View
                   className="rounded-lg overflow-hidden border border-border mb-3"
                   style={{ height: 160 }}
@@ -320,7 +352,11 @@ export default function RestaurantManageScreen() {
                 containerClassName="mb-2"
               />
               <Button
-                label={CLOUDINARY_ENABLED ? 'Pick / upload image' : 'Image upload disabled'}
+                label={
+                  CLOUDINARY_ENABLED
+                    ? 'Pick / upload image'
+                    : 'Image upload disabled'
+                }
                 onPress={pickImage}
                 variant="secondary"
                 size="sm"
@@ -332,14 +368,20 @@ export default function RestaurantManageScreen() {
                   className="text-subtle text-xs mt-2"
                   style={{ fontFamily: 'Inter_400Regular' }}
                 >
-                  Set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET in
-                  restaurant-app/.env to enable image upload.
+                  Set EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME and
+                  EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET in restaurant-app/.env to
+                  enable image upload.
                 </Text>
               ) : null}
               {itemImageUrl ? (
                 <Image
                   source={{ uri: itemImageUrl }}
-                  style={{ width: '100%', height: 160, borderRadius: 12, marginTop: 12 }}
+                  style={{
+                    width: '100%',
+                    height: 160,
+                    borderRadius: 12,
+                    marginTop: 12,
+                  }}
                   resizeMode="cover"
                 />
               ) : null}
@@ -350,7 +392,10 @@ export default function RestaurantManageScreen() {
                 >
                   Available for ordering
                 </Text>
-                <Switch value={itemAvailable} onValueChange={setItemAvailable} />
+                <Switch
+                  value={itemAvailable}
+                  onValueChange={setItemAvailable}
+                />
               </View>
               <Button
                 label={editingMenuId ? 'Update item' : 'Create item'}
@@ -385,7 +430,12 @@ export default function RestaurantManageScreen() {
               {item.imageUrl ? (
                 <Image
                   source={{ uri: item.imageUrl }}
-                  style={{ width: 56, height: 56, borderRadius: 10, marginRight: 12 }}
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 10,
+                    marginRight: 12,
+                  }}
                   resizeMode="cover"
                 />
               ) : (
@@ -408,7 +458,8 @@ export default function RestaurantManageScreen() {
                   className="text-muted text-xs mt-0.5"
                   style={{ fontFamily: 'Inter_500Medium' }}
                 >
-                  {'\u20A6'}{Number(item.price).toLocaleString()}
+                  {'\u20A6'}
+                  {Number(item.price).toLocaleString()}
                 </Text>
                 <View className="mt-1">
                   <Badge

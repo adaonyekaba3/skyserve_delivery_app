@@ -38,7 +38,11 @@ export class IdentitySyncService {
 
   async syncFromWebhook(
     payload: Record<string, unknown>,
-    headers?: { svixId?: string; svixTimestamp?: string; svixSignature?: string },
+    headers?: {
+      svixId?: string;
+      svixTimestamp?: string;
+      svixSignature?: string;
+    },
     rawBody?: string,
   ): Promise<SyncResult> {
     this.verifySvixSignature(payload, headers, rawBody);
@@ -64,7 +68,9 @@ export class IdentitySyncService {
 
   private verifySvixSignature(
     payload: Record<string, unknown>,
-    headers: { svixId?: string; svixTimestamp?: string; svixSignature?: string } | undefined,
+    headers:
+      | { svixId?: string; svixTimestamp?: string; svixSignature?: string }
+      | undefined,
     rawBody: string | undefined,
   ): void {
     const secret = process.env.CLERK_WEBHOOK_SECRET;
@@ -72,14 +78,20 @@ export class IdentitySyncService {
 
     if (!secret) {
       if (inProduction) {
-        throw new BadRequestException('CLERK_WEBHOOK_SECRET is not configured in production');
+        throw new BadRequestException(
+          'CLERK_WEBHOOK_SECRET is not configured in production',
+        );
       }
-      this.logger.warn('CLERK_WEBHOOK_SECRET not set; skipping svix verification (dev only)');
+      this.logger.warn(
+        'CLERK_WEBHOOK_SECRET not set; skipping svix verification (dev only)',
+      );
       return;
     }
 
     if (!headers?.svixId || !headers.svixTimestamp || !headers.svixSignature) {
-      throw new BadRequestException('Missing svix-id / svix-timestamp / svix-signature headers');
+      throw new BadRequestException(
+        'Missing svix-id / svix-timestamp / svix-signature headers',
+      );
     }
 
     const wh = new Webhook(secret);
@@ -91,7 +103,9 @@ export class IdentitySyncService {
         'svix-signature': headers.svixSignature,
       });
     } catch (err) {
-      throw new BadRequestException(`Invalid svix signature: ${(err as Error).message}`);
+      throw new BadRequestException(
+        `Invalid svix signature: ${(err as Error).message}`,
+      );
     }
   }
 
@@ -123,7 +137,9 @@ export class IdentitySyncService {
       })
       .returning({ id: users.id });
 
-    this.logger.log(`Upserted user from Clerk: clerkId=${clerkUserId} dbId=${row.id}`);
+    this.logger.log(
+      `Upserted user from Clerk: clerkId=${clerkUserId} dbId=${row.id}`,
+    );
     return { kind: 'upserted', clerkUserId, dbUserId: row.id };
   }
 

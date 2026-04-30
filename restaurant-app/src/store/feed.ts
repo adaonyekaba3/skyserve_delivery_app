@@ -10,7 +10,12 @@ interface FeedState {
 export const useFeed = create<FeedState>((set) => ({
   byId: {},
   upsert: (order) =>
-    set((state) => ({ byId: { ...state.byId, [order.id]: { ...state.byId[order.id], ...order } } })),
+    set((state) => ({
+      byId: {
+        ...state.byId,
+        [order.id]: { ...state.byId[order.id], ...order },
+      },
+    })),
   setMany: (orders) =>
     set(() => {
       const byId: Record<string, Order> = {};

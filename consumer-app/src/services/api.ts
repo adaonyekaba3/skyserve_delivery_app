@@ -9,7 +9,8 @@ import type {
   Restaurant,
 } from './types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 
 export type TokenGetter = () => Promise<string | null>;
 
@@ -50,7 +51,9 @@ export async function getRestaurant(id: string): Promise<Restaurant> {
 }
 
 export async function getMenu(restaurantId: string): Promise<MenuItem[]> {
-  const { data } = await client.get<MenuItem[]>(`/restaurants/${restaurantId}/menu`);
+  const { data } = await client.get<MenuItem[]>(
+    `/restaurants/${restaurantId}/menu`,
+  );
   return data;
 }
 
@@ -77,7 +80,10 @@ export async function getOrder(id: string): Promise<Order> {
   return data;
 }
 
-export async function patchOrderStatus(id: string, status: OrderStatus): Promise<Order> {
+export async function patchOrderStatus(
+  id: string,
+  status: OrderStatus,
+): Promise<Order> {
   const { data } = await client.patch<Order>(`/orders/${id}/status/${status}`);
   return data;
 }
@@ -90,7 +96,10 @@ export async function initializePayment(input: {
   provider: PaymentProvider;
   idempotencyKey: string;
 }): Promise<PaymentInitialization> {
-  const { data } = await client.post<PaymentInitialization>('/payments/initialize', input);
+  const { data } = await client.post<PaymentInitialization>(
+    '/payments/initialize',
+    input,
+  );
   return data;
 }
 

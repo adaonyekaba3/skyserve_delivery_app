@@ -22,9 +22,15 @@ const flag = (name, def) => {
   return idx >= 0 && args[idx + 1] ? args[idx + 1] : def;
 };
 
-const baseUrl = flag('url', process.env.SKYSERVE_API_BASE ?? 'http://localhost:3000');
+const baseUrl = flag(
+  'url',
+  process.env.SKYSERVE_API_BASE ?? 'http://localhost:3000',
+);
 const endpoint = `${baseUrl.replace(/\/$/, '')}/api/v1/identity/webhooks/clerk`;
-const clerkUserId = flag('clerkId', `user_smoke_${Math.random().toString(36).slice(2, 10)}`);
+const clerkUserId = flag(
+  'clerkId',
+  `user_smoke_${Math.random().toString(36).slice(2, 10)}`,
+);
 const email = flag('email', `${clerkUserId}@skyserve.local`);
 
 const ACTIONS = {
@@ -35,7 +41,9 @@ const ACTIONS = {
 
 const eventType = ACTIONS[action];
 if (!eventType) {
-  console.error(`Unknown action "${action}". Use one of: created | updated | deleted`);
+  console.error(
+    `Unknown action "${action}". Use one of: created | updated | deleted`,
+  );
   process.exit(1);
 }
 
@@ -49,7 +57,10 @@ const baseUserData = {
 
 const payload = {
   type: eventType,
-  data: eventType === 'user.deleted' ? { id: clerkUserId, deleted: true } : baseUserData,
+  data:
+    eventType === 'user.deleted'
+      ? { id: clerkUserId, deleted: true }
+      : baseUserData,
 };
 
 const body = JSON.stringify(payload);
@@ -65,7 +76,9 @@ if (secret) {
   headers['svix-signature'] = `v1,${signed}`;
   console.log(`Signing with CLERK_WEBHOOK_SECRET (svix-id=${svixId}).`);
 } else {
-  console.log('CLERK_WEBHOOK_SECRET not set; sending unsigned (dev fallback only).');
+  console.log(
+    'CLERK_WEBHOOK_SECRET not set; sending unsigned (dev fallback only).',
+  );
 }
 
 console.log(`POST ${endpoint}  type=${eventType}  clerkId=${clerkUserId}`);
@@ -82,8 +95,13 @@ try {
 }
 
 function signSvix(rawSecret, svixId, timestamp, body) {
-  const cleanSecret = rawSecret.startsWith('whsec_') ? rawSecret.slice('whsec_'.length) : rawSecret;
+  const cleanSecret = rawSecret.startsWith('whsec_')
+    ? rawSecret.slice('whsec_'.length)
+    : rawSecret;
   const key = Buffer.from(cleanSecret, 'base64');
   const signedPayload = `${svixId}.${timestamp}.${body}`;
-  return crypto.createHmac('sha256', key).update(signedPayload).digest('base64');
+  return crypto
+    .createHmac('sha256', key)
+    .update(signedPayload)
+    .digest('base64');
 }

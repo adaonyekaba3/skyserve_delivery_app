@@ -5,7 +5,11 @@ import { fetchMe } from '@/lib/api.server';
 
 const DEV_AUTH_BYPASS = process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === 'true';
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const me = await fetchMe();
 
   if (!me && !DEV_AUTH_BYPASS) {

@@ -62,7 +62,10 @@ function HomeStackNav() {
   return (
     <HomeStack.Navigator screenOptions={stackOpts}>
       <HomeStack.Screen name="Home" component={HomeScreen} />
-      <HomeStack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+      <HomeStack.Screen
+        name="RestaurantDetail"
+        component={RestaurantDetailScreen}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -71,7 +74,10 @@ function OrdersStackNav() {
   return (
     <OrdersStack.Navigator screenOptions={stackOpts}>
       <OrdersStack.Screen name="OrderHistory" component={OrderHistoryScreen} />
-      <OrdersStack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+      <OrdersStack.Screen
+        name="OrderTracking"
+        component={OrderTrackingScreen}
+      />
     </OrdersStack.Navigator>
   );
 }
@@ -134,7 +140,9 @@ function TabIcon({ name, label, focused, badge }: TabIconProps) {
       </View>
       <Text
         className={`text-[11px] mt-1 ${focused ? 'text-primary' : 'text-subtle'}`}
-        style={{ fontFamily: focused ? 'Inter_600SemiBold' : 'Inter_500Medium' }}
+        style={{
+          fontFamily: focused ? 'Inter_600SemiBold' : 'Inter_500Medium',
+        }}
       >
         {label}
       </Text>

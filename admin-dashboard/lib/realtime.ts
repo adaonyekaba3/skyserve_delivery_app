@@ -28,7 +28,10 @@ export function getPusher(): Pusher | null {
               'Content-Type': 'application/json',
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-            body: JSON.stringify({ socket_id: socketId, channel_name: channel.name }),
+            body: JSON.stringify({
+              socket_id: socketId,
+              channel_name: channel.name,
+            }),
           });
           if (!res.ok) throw new Error(`auth failed: ${res.status}`);
           callback(null, await res.json());

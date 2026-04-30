@@ -37,11 +37,15 @@ export class IdentityController {
     const hasSecret = Boolean(process.env.CLERK_WEBHOOK_SECRET);
 
     if (inProduction && (!svixId || !svixTimestamp || !svixSignature)) {
-      throw new BadRequestException('Clerk webhooks require svix headers in production');
+      throw new BadRequestException(
+        'Clerk webhooks require svix headers in production',
+      );
     }
 
     if (hasSecret && !rawBody) {
-      throw new BadRequestException('Raw request body is required to verify svix signature');
+      throw new BadRequestException(
+        'Raw request body is required to verify svix signature',
+      );
     }
 
     const result = await this.identitySyncService.syncFromWebhook(

@@ -107,10 +107,7 @@ export class OrdersController {
   ) {
     return this.ordersService.findWithItems(id).then((order) => {
       if (!order) return null;
-      if (
-        user.role === Role.CUSTOMER &&
-        order.customerId !== user.dbUserId
-      ) {
+      if (user.role === Role.CUSTOMER && order.customerId !== user.dbUserId) {
         throw new ForbiddenException('You do not own this order');
       }
       if (

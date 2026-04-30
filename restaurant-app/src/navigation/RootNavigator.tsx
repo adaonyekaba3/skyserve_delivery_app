@@ -53,7 +53,10 @@ function OrdersStackNav() {
 function ManageStackNav() {
   return (
     <ManageStack.Navigator screenOptions={stackOpts}>
-      <ManageStack.Screen name="RestaurantManage" component={RestaurantManageScreen} />
+      <ManageStack.Screen
+        name="RestaurantManage"
+        component={RestaurantManageScreen}
+      />
     </ManageStack.Navigator>
   );
 }
@@ -66,13 +69,25 @@ function AccountStackNav() {
   );
 }
 
-function TabIcon({ glyph, label, focused }: { glyph: string; label: string; focused: boolean }) {
+function TabIcon({
+  glyph,
+  label,
+  focused,
+}: {
+  glyph: string;
+  label: string;
+  focused: boolean;
+}) {
   return (
     <View className="items-center justify-center" style={{ minWidth: 60 }}>
-      <Text style={{ fontSize: 18, color: focused ? '#1E3A8A' : '#94A3B8' }}>{glyph}</Text>
+      <Text style={{ fontSize: 18, color: focused ? '#1E3A8A' : '#94A3B8' }}>
+        {glyph}
+      </Text>
       <Text
         className={`text-[11px] mt-0.5 ${focused ? 'text-primary' : 'text-subtle'}`}
-        style={{ fontFamily: focused ? 'Inter_600SemiBold' : 'Inter_500Medium' }}
+        style={{
+          fontFamily: focused ? 'Inter_600SemiBold' : 'Inter_500Medium',
+        }}
       >
         {label}
       </Text>
@@ -141,12 +156,16 @@ export default function RootNavigator() {
   } else if (!user || canAccessRestaurantApp || DEV_AUTH_BYPASS) {
     stack = <RootStack.Screen name="MainTabs" component={MainTabs} />;
   } else {
-    stack = <RootStack.Screen name="NotAuthorized" component={NotAuthorizedScreen} />;
+    stack = (
+      <RootStack.Screen name="NotAuthorized" component={NotAuthorizedScreen} />
+    );
   }
 
   return (
     <NavigationContainer>
-      <RootStack.Navigator screenOptions={stackOpts}>{stack}</RootStack.Navigator>
+      <RootStack.Navigator screenOptions={stackOpts}>
+        {stack}
+      </RootStack.Navigator>
     </NavigationContainer>
   );
 }

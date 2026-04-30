@@ -22,7 +22,8 @@ export function Screen({
   keyboardAvoiding = false,
   bg = 'bg',
 }: ScreenProps) {
-  const bgClass = bg === 'primary' ? 'bg-primary' : bg === 'surface' ? 'bg-surface' : 'bg-bg';
+  const bgClass =
+    bg === 'primary' ? 'bg-primary' : bg === 'surface' ? 'bg-surface' : 'bg-bg';
   const statusStyle = bg === 'primary' ? 'light' : 'dark';
 
   const inner = scroll ? (

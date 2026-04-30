@@ -15,14 +15,14 @@ npx expo start
 
 Same shape as the consumer app:
 
-| Key | Notes |
-| --- | --- |
-| `EXPO_PUBLIC_API_URL` | Defaults to `http://localhost:3000/api/v1` |
-| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | Same Clerk instance as consumer app |
-| `EXPO_PUBLIC_PUSHER_KEY` | Same Pusher app |
-| `EXPO_PUBLIC_PUSHER_CLUSTER` | e.g. `mt1` |
-| `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` | Optional for menu image uploads |
-| `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Optional unsigned upload preset |
+| Key                                    | Notes                                      |
+| -------------------------------------- | ------------------------------------------ |
+| `EXPO_PUBLIC_API_URL`                  | Defaults to `http://localhost:3000/api/v1` |
+| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`    | Same Clerk instance as consumer app        |
+| `EXPO_PUBLIC_PUSHER_KEY`               | Same Pusher app                            |
+| `EXPO_PUBLIC_PUSHER_CLUSTER`           | e.g. `mt1`                                 |
+| `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME`    | Optional for menu image uploads            |
+| `EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Optional unsigned upload preset            |
 
 ## Realtime channels
 

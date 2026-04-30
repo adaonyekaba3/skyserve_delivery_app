@@ -48,7 +48,8 @@ export default function CartScreen({ navigation, route }: Props) {
   const total = useCart((s) => s.totalAmount());
   const setQuantity = useCart((s) => s.setQuantity);
   const remove = useCart((s) => s.remove);
-  const restaurantId = route.params?.restaurantId ?? lines[0]?.menuItem.restaurantId;
+  const restaurantId =
+    route.params?.restaurantId ?? lines[0]?.menuItem.restaurantId;
 
   if (!lines.length) {
     return (
@@ -114,7 +115,10 @@ export default function CartScreen({ navigation, route }: Props) {
                   <QtyButton
                     iconName="minus"
                     onPress={() =>
-                      setQuantity(item.menuItem.id, Math.max(0, item.quantity - 1))
+                      setQuantity(
+                        item.menuItem.id,
+                        Math.max(0, item.quantity - 1),
+                      )
                     }
                   />
                   <Text
@@ -125,7 +129,9 @@ export default function CartScreen({ navigation, route }: Props) {
                   </Text>
                   <QtyButton
                     iconName="plus"
-                    onPress={() => setQuantity(item.menuItem.id, item.quantity + 1)}
+                    onPress={() =>
+                      setQuantity(item.menuItem.id, item.quantity + 1)
+                    }
                   />
                 </View>
               </View>

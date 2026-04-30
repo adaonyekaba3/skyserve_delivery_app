@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useSignIn } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -97,12 +103,20 @@ export default function AuthScreen() {
             />
 
             <View className="mt-5">
-              <Button label="Sign in" onPress={handle} loading={busy} fullWidth />
+              <Button
+                label="Sign in"
+                onPress={handle}
+                loading={busy}
+                fullWidth
+              />
             </View>
 
             {error ? (
               <View className="bg-danger-soft rounded-md mt-4 px-3 py-2.5">
-                <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+                <Text
+                  className="text-danger text-sm"
+                  style={{ fontFamily: 'Inter_500Medium' }}
+                >
                   {error}
                 </Text>
               </View>

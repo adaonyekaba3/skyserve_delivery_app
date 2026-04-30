@@ -13,14 +13,14 @@ npx expo start
 
 ## Required env
 
-| Key | Notes |
-| --- | --- |
-| `EXPO_PUBLIC_API_URL` | Defaults to `http://localhost:3000/api/v1` |
-| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | From Clerk dashboard |
-| `EXPO_PUBLIC_PUSHER_KEY` | From Pusher Channels app |
-| `EXPO_PUBLIC_PUSHER_CLUSTER` | e.g. `mt1` |
-| `EXPO_PUBLIC_MAP_PROVIDER` | `google`, `mapbox`, or `none` |
-| `EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN` | Optional, used for Mapbox static links |
+| Key                                 | Notes                                      |
+| ----------------------------------- | ------------------------------------------ |
+| `EXPO_PUBLIC_API_URL`               | Defaults to `http://localhost:3000/api/v1` |
+| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | From Clerk dashboard                       |
+| `EXPO_PUBLIC_PUSHER_KEY`            | From Pusher Channels app                   |
+| `EXPO_PUBLIC_PUSHER_CLUSTER`        | e.g. `mt1`                                 |
+| `EXPO_PUBLIC_MAP_PROVIDER`          | `google`, `mapbox`, or `none`              |
+| `EXPO_PUBLIC_MAPBOX_PUBLIC_TOKEN`   | Optional, used for Mapbox static links     |
 
 ## Folder map
 

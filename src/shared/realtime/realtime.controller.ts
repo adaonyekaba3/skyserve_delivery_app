@@ -1,9 +1,4 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Post } from '@nestjs/common';
 import { IsString } from 'class-validator';
 import { PusherService } from './pusher.service';
 import { CurrentUser } from 'src/modules/identity/guards/current-user.decorator';
@@ -23,7 +18,10 @@ export class RealtimeController {
   constructor(private readonly pusherService: PusherService) {}
 
   @Post('auth')
-  authorize(@Body() body: PusherAuthDto, @CurrentUser() user: AuthenticatedUser) {
+  authorize(
+    @Body() body: PusherAuthDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const { channel_name: channel, socket_id: socketId } = body;
     this.assertCanSubscribe(channel, user);
     return this.pusherService.authorizeChannel(socketId, channel);
@@ -33,7 +31,9 @@ export class RealtimeController {
     if (channel.startsWith('private-customer-')) {
       const requested = channel.slice('private-customer-'.length);
       if (requested !== user.dbUserId) {
-        throw new ForbiddenException('Cannot subscribe to another customer channel');
+        throw new ForbiddenException(
+          'Cannot subscribe to another customer channel',
+        );
       }
       return;
     }
@@ -46,7 +46,9 @@ export class RealtimeController {
       ) {
         return;
       }
-      throw new ForbiddenException('Cannot subscribe to this restaurant channel');
+      throw new ForbiddenException(
+        'Cannot subscribe to this restaurant channel',
+      );
     }
     if (channel === 'private-admin' || channel.startsWith('private-admin-')) {
       if (user.role === Role.ADMIN || user.role === Role.OPERATIONS) {

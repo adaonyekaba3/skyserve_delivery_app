@@ -14,8 +14,9 @@ export default function HostHintBanner() {
   return (
     <View style={styles.banner}>
       <Text style={styles.text}>
-        EXPO_PUBLIC_API_URL is unset or points to localhost. Set it to your Mac LAN IP (for
-        example http://10.0.0.57:3000/api/v1) in consumer-app/.env, then restart Expo.
+        EXPO_PUBLIC_API_URL is unset or points to localhost. Set it to your Mac
+        LAN IP (for example http://10.0.0.57:3000/api/v1) in consumer-app/.env,
+        then restart Expo.
       </Text>
     </View>
   );

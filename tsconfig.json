@@ -15,21 +15,11 @@
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "paths": {
-      "src/*": [
-        "src/*"
-      ]
+      "src/*": ["src/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    "drizzle/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "drizzle/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

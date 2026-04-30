@@ -66,7 +66,11 @@ export function Button({
       className={`${variantBg[variant]} ${sizeClass[size]} ${widthClass} ${opacityClass} rounded-lg items-center justify-center flex-row ${className}`}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? '#fff' : '#1E3A8A'} />
+        <ActivityIndicator
+          color={
+            variant === 'primary' || variant === 'danger' ? '#fff' : '#1E3A8A'
+          }
+        />
       ) : (
         <View className="flex-row items-center gap-2">
           {icon}

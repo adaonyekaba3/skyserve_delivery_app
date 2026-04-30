@@ -11,8 +11,10 @@ const prisma = new PrismaClient();
 async function main() {
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@skyserve.local';
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin12345!';
-  const operationsEmail = process.env.SEED_OPERATIONS_EMAIL ?? 'ops@skyserve.local';
-  const operationsPassword = process.env.SEED_OPERATIONS_PASSWORD ?? 'Ops12345!';
+  const operationsEmail =
+    process.env.SEED_OPERATIONS_EMAIL ?? 'ops@skyserve.local';
+  const operationsPassword =
+    process.env.SEED_OPERATIONS_PASSWORD ?? 'Ops12345!';
 
   const [adminPasswordHash, operationsPasswordHash] = await Promise.all([
     bcrypt.hash(adminPassword, 10),

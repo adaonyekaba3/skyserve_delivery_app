@@ -10,7 +10,9 @@ import {
 export class PaystackProvider implements PaymentProviderPort {
   readonly name = 'PAYSTACK' as const;
 
-  async initialize(input: InitializePaymentInput): Promise<InitializePaymentResult> {
+  async initialize(
+    input: InitializePaymentInput,
+  ): Promise<InitializePaymentResult> {
     return {
       providerRef: `pst_${input.orderId}`,
       authorizationUrl: `${input.callbackUrl}?provider=paystack`,

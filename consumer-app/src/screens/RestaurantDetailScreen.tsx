@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, Pressable, ToastAndroid, Platform, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  Pressable,
+  ToastAndroid,
+  Platform,
+  Alert,
+} from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getMenu, getRestaurant } from '../services/api';
 import type { MenuItem, Restaurant } from '../services/types';
@@ -148,12 +157,10 @@ export default function RestaurantDetailScreen({ route, navigation }: Props) {
           <Button
             label={`View cart (${totalCount}) \u00B7 \u20A6${totalAmount.toLocaleString()}`}
             onPress={() =>
-              navigation
-                .getParent()
-                ?.navigate('CartTab', {
-                  screen: 'Cart',
-                  params: { restaurantId },
-                })
+              navigation.getParent()?.navigate('CartTab', {
+                screen: 'Cart',
+                params: { restaurantId },
+              })
             }
             fullWidth
           />

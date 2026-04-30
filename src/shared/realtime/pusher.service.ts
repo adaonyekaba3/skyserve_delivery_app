@@ -37,7 +37,11 @@ export class PusherService {
     return this.client !== null;
   }
 
-  async trigger(channel: string, event: string, payload: unknown): Promise<void> {
+  async trigger(
+    channel: string,
+    event: string,
+    payload: unknown,
+  ): Promise<void> {
     if (!this.client) {
       this.logger.debug(`Pusher trigger skipped: ${channel}:${event}`);
       return;
@@ -45,11 +49,18 @@ export class PusherService {
     try {
       await this.client.trigger(channel, event, payload);
     } catch (err) {
-      this.logger.error(`Pusher trigger failed for ${channel}:${event}`, (err as Error).message);
+      this.logger.error(
+        `Pusher trigger failed for ${channel}:${event}`,
+        (err as Error).message,
+      );
     }
   }
 
-  authorizeChannel(socketId: string, channel: string, presenceData?: Record<string, unknown>): {
+  authorizeChannel(
+    socketId: string,
+    channel: string,
+    presenceData?: Record<string, unknown>,
+  ): {
     auth: string;
     channel_data?: string;
   } {

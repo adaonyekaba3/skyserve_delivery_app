@@ -21,7 +21,13 @@ export class DeliveriesService {
 
   updateStatus(
     deliveryId: string,
-    nextStatus: 'ASSIGNED' | 'PICKED_UP' | 'IN_FLIGHT' | 'DELIVERED' | 'FAILED' | 'CANCELLED',
+    nextStatus:
+      | 'ASSIGNED'
+      | 'PICKED_UP'
+      | 'IN_FLIGHT'
+      | 'DELIVERED'
+      | 'FAILED'
+      | 'CANCELLED',
     location?: { latitude: string; longitude: string; etaMinutes?: number },
   ) {
     return this.logisticsWorkflowService.updateDeliveryStatus({

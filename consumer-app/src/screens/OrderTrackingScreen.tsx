@@ -45,10 +45,15 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
   const [userDbId, setUserDbId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [drone, setDrone] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [droneMeta, setDroneMeta] = useState<{ id?: string; battery?: number; status?: string }>(
-    {},
-  );
+  const [drone, setDrone] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [droneMeta, setDroneMeta] = useState<{
+    id?: string;
+    battery?: number;
+    status?: string;
+  }>({});
 
   useEffect(() => {
     let active = true;
@@ -74,14 +79,20 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
   useOrderUpdates(userDbId);
   useDroneTelemetry(
     useCallback((payload: any) => {
-      const lat = payload.currentLatitude ? Number(payload.currentLatitude) : null;
-      const lon = payload.currentLongitude ? Number(payload.currentLongitude) : null;
+      const lat = payload.currentLatitude
+        ? Number(payload.currentLatitude)
+        : null;
+      const lon = payload.currentLongitude
+        ? Number(payload.currentLongitude)
+        : null;
       if (lat !== null && lon !== null) {
         setDrone({ latitude: lat, longitude: lon });
       }
       setDroneMeta({
         id: payload.droneId ?? payload.id,
-        battery: payload.batteryLevel ? Number(payload.batteryLevel) : undefined,
+        battery: payload.batteryLevel
+          ? Number(payload.batteryLevel)
+          : undefined,
         status: payload.droneStatus ?? payload.status,
       });
     }, []),
@@ -112,11 +123,17 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
 
   const origin =
     restaurant && restaurant.latitude && restaurant.longitude
-      ? { latitude: Number(restaurant.latitude), longitude: Number(restaurant.longitude) }
+      ? {
+          latitude: Number(restaurant.latitude),
+          longitude: Number(restaurant.longitude),
+        }
       : null;
   const destination =
     order.deliveryLatitude && order.deliveryLongitude
-      ? { latitude: Number(order.deliveryLatitude), longitude: Number(order.deliveryLongitude) }
+      ? {
+          latitude: Number(order.deliveryLatitude),
+          longitude: Number(order.deliveryLongitude),
+        }
       : origin;
 
   const openExternalMap = async () => {
@@ -133,7 +150,11 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Order tracking" subtitle={`#${order.id.slice(0, 8)}`} showBack />
+      <AppHeader
+        title="Order tracking"
+        subtitle={`#${order.id.slice(0, 8)}`}
+        showBack
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
@@ -236,7 +257,9 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
                 className="text-text text-sm mt-1"
                 style={{ fontFamily: 'Inter_600SemiBold' }}
               >
-                {droneMeta.battery !== undefined ? `${Math.round(droneMeta.battery)}%` : '--%'}
+                {droneMeta.battery !== undefined
+                  ? `${Math.round(droneMeta.battery)}%`
+                  : '--%'}
               </Text>
               <View className="mt-1.5 h-1 rounded-full bg-hairline overflow-hidden">
                 <View
@@ -258,7 +281,12 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
             Live location
           </Text>
           {MAP_PROVIDER === 'none' || !origin || !destination ? (
-            <DroneCanvas origin={origin} destination={destination} drone={drone} status={status} />
+            <DroneCanvas
+              origin={origin}
+              destination={destination}
+              drone={drone}
+              status={status}
+            />
           ) : (
             <View
               className="rounded-lg overflow-hidden border border-border"
@@ -276,7 +304,11 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
                 <Marker coordinate={origin} title="Restaurant" />
                 <Marker coordinate={destination} title="Delivery point" />
                 {drone ? <Marker coordinate={drone} title="Drone" /> : null}
-                <Polyline coordinates={[origin, destination]} strokeWidth={3} strokeColor="#C6A052" />
+                <Polyline
+                  coordinates={[origin, destination]}
+                  strokeWidth={3}
+                  strokeColor="#C6A052"
+                />
               </MapView>
             </View>
           )}
@@ -328,7 +360,10 @@ export default function OrderTrackingScreen({ route, navigation }: Props) {
 
         {error ? (
           <View className="bg-danger-soft rounded-md mt-4 px-3 py-2.5">
-            <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+            <Text
+              className="text-danger text-sm"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
               {error}
             </Text>
           </View>

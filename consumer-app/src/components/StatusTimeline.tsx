@@ -29,7 +29,10 @@ export default function StatusTimeline({ status }: Props) {
   if (status === 'CANCELLED') {
     return (
       <View className="bg-danger-soft rounded-md p-4 items-center">
-        <Text className="text-danger text-base" style={{ fontFamily: 'Inter_600SemiBold' }}>
+        <Text
+          className="text-danger text-base"
+          style={{ fontFamily: 'Inter_600SemiBold' }}
+        >
           Order cancelled
         </Text>
       </View>

@@ -3,10 +3,12 @@
 Execution mode: strict sequential, repo-fit split prompts.
 
 ## Phase Map (1.1-1.7)
+
 - Completed prompt translation and materialization in `docs/prompt-1.1-to-1.6-safe-split.md`.
 - Existing Prompt 1.7 source retained in `docs/prompt-1.7-safe-split.md`.
 
 ## 1.1-A to 1.1-C (Foundation + Hygiene)
+
 - Changes:
   - Added active-source-only Jest scope in `jest.config.ts`.
   - Updated test scripts in `package.json` to be CI-safe when no unit tests exist yet.
@@ -16,6 +18,7 @@ Execution mode: strict sequential, repo-fit split prompts.
   - `npm run test` -> pass (`No tests found`, exit 0 by design).
 
 ## 1.2-A to 1.2-C (Drizzle + Migration Workflow)
+
 - Changes:
   - Removed all macOS AppleDouble sidecars under `drizzle/` (`._*`, `.__*`) that were causing `drizzle-kit` to fail JSON parsing.
   - Removed duplicate placeholder `DATABASE_URL` / `DATABASE_URL_UNPOOLED` lines from `.env` that were overriding the real Neon credentials at the top of the file.
@@ -27,6 +30,7 @@ Execution mode: strict sequential, repo-fit split prompts.
   - Migration tooling/path verified end-to-end against a real Neon branch.
 
 ## 1.3-A to 1.3-C (Identity + Webhooks + RBAC)
+
 - Existing architecture validated in running app route map:
   - `/api/identity/me`
   - `/api/identity/webhooks/clerk`
@@ -35,6 +39,7 @@ Execution mode: strict sequential, repo-fit split prompts.
   - Local server starts successfully under Vercel dev proxy.
 
 ## 1.4-A to 1.4-C (Mobile Contract Companion Scope)
+
 - Backend-side contracts and endpoints for orders/catalog/address-related flows remain in modular structure under:
   - `src/modules/orders`
   - `src/modules/catalog`
@@ -43,12 +48,14 @@ Execution mode: strict sequential, repo-fit split prompts.
   - Mobile UI phases are documented as contract-oriented for this backend repo.
 
 ## 1.5-A to 1.5-C (Payments)
+
 - Existing provider-driven payment module validated by startup route map:
   - `/api/payments/initialize`
   - `/api/payments/webhooks/:provider`
 - Runbook/env constraints documented for webhook/provider keys.
 
 ## 1.6-A to 1.6-C (Operator Workflows)
+
 - Existing operator and workflow endpoints validated by startup route map:
   - `/api/operator/dashboard`
   - `/api/dispatch/orders/:status/validate`
@@ -56,6 +63,7 @@ Execution mode: strict sequential, repo-fit split prompts.
 - Regression guard retained: lifecycle/workflow orchestration remains in modular boundaries.
 
 ## 1.7-A to 1.7-B (Vercel)
+
 - 1.7-A Validation:
   - `npx vercel --version` -> pass.
   - `npx vercel whoami` -> pass (`adaonyekaba3`).
@@ -75,6 +83,7 @@ Execution mode: strict sequential, repo-fit split prompts.
   - Updated `docs/vercel-deployment-runbook.md` with auth-walled preview smoke procedure and which env keys are still pending.
 
 ## Remaining Blockers
+
 - Real Clerk + payment provider secrets (`CLERK_*`, `PAYSTACK_*`, `FLUTTERWAVE_*`) are still placeholders in `.env`. They are not provisioned in Vercel Preview/Production yet; auth- and payment-bound endpoints will fail until those keys land.
 - Vercel **Preview** `DATABASE_URL` is currently scoped to `chore/neon-env-update`; needs broadening (or per-branch additions) before merging to a long-lived branch.
 - `npm run test:e2e` currently returns non-zero in this environment; treat as pending deeper e2e harness repair once test target/scope is finalized.

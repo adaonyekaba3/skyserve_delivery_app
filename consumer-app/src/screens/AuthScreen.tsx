@@ -1,13 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Card, Button, Input, Icon } from '../ui';
 
 export default function AuthScreen() {
-  const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn();
-  const { isLoaded: signUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
+  const {
+    isLoaded: signInLoaded,
+    signIn,
+    setActive: setSignInActive,
+  } = useSignIn();
+  const {
+    isLoaded: signUpLoaded,
+    signUp,
+    setActive: setSignUpActive,
+  } = useSignUp();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -135,7 +150,12 @@ export default function AuthScreen() {
                   autoCapitalize="none"
                 />
                 <View className="mt-5">
-                  <Button label="Verify" onPress={handleVerify} loading={busy} fullWidth />
+                  <Button
+                    label="Verify"
+                    onPress={handleVerify}
+                    loading={busy}
+                    fullWidth
+                  />
                 </View>
               </>
             ) : (
@@ -154,7 +174,9 @@ export default function AuthScreen() {
                         <Text
                           className={`text-sm ${active ? 'text-primary' : 'text-muted'}`}
                           style={{
-                            fontFamily: active ? 'Inter_700Bold' : 'Inter_500Medium',
+                            fontFamily: active
+                              ? 'Inter_700Bold'
+                              : 'Inter_500Medium',
                           }}
                         >
                           {m === 'signin' ? 'Sign in' : 'Sign up'}
@@ -177,7 +199,9 @@ export default function AuthScreen() {
                   label="Password"
                   value={password}
                   onChangeText={setPassword}
-                  placeholder={'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}
+                  placeholder={
+                    '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'
+                  }
                   secureTextEntry
                 />
                 <View className="mt-5">

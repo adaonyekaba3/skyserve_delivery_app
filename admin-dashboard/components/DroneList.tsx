@@ -1,26 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plane, Battery, MapPin, Wrench, Power } from 'lucide-react';
 import type { Drone } from '@/lib/types';
 import { subscribe, unsubscribe } from '@/lib/realtime';
+import { Card, PageHero, SectionHeader, Badge, EmptyState } from './ui';
+import type { BadgeTone } from './ui';
 
 const DRONE_STATUS: Record<
   Drone['status'],
-  { label: string; bg: string; text: string }
+  { label: string; tone: BadgeTone }
 > = {
-  IDLE: { label: 'Idle', bg: 'bg-hairline', text: 'text-muted' },
-  DELIVERING: { label: 'Delivering', bg: 'bg-accent-soft', text: 'text-accent' },
-  CHARGING: { label: 'Charging', bg: 'bg-primary-soft', text: 'text-primary' },
-  MAINTENANCE: { label: 'Maintenance', bg: 'bg-danger-soft', text: 'text-danger' },
+  IDLE: { label: 'Idle', tone: 'neutral' },
+  DELIVERING: { label: 'In flight', tone: 'gold' },
+  CHARGING: { label: 'Charging', tone: 'primary' },
+  MAINTENANCE: { label: 'Maintenance', tone: 'danger' },
 };
 
-function batteryColor(pct: number) {
+function batteryBarClass(pct: number) {
   if (pct >= 60) return 'bg-success';
   if (pct >= 30) return 'bg-warning';
   return 'bg-danger';
 }
 
-export default function DroneList({ initialDrones }: { initialDrones: Drone[] }) {
+export default function DroneList({
+  initialDrones,
+}: {
+  initialDrones: Drone[];
+}) {
   const [drones, setDrones] = useState(initialDrones);
 
   useEffect(() => {
@@ -28,7 +35,9 @@ export default function DroneList({ initialDrones }: { initialDrones: Drone[] })
     if (!channel) return;
     const handler = (payload: Drone) => {
       setDrones((current) => {
-        const i = current.findIndex((d) => d.id === payload.id || d.code === payload.code);
+        const i = current.findIndex(
+          (d) => d.id === payload.id || d.code === payload.code,
+        );
         if (i === -1) return [payload, ...current];
         const copy = [...current];
         copy[i] = { ...copy[i], ...payload };
@@ -42,71 +51,154 @@ export default function DroneList({ initialDrones }: { initialDrones: Drone[] })
     };
   }, []);
 
+  const summary = useMemo(() => {
+    const acc = { idle: 0, delivering: 0, charging: 0, maintenance: 0 };
+    for (const d of drones) {
+      if (d.status === 'IDLE') acc.idle += 1;
+      else if (d.status === 'DELIVERING') acc.delivering += 1;
+      else if (d.status === 'CHARGING') acc.charging += 1;
+      else if (d.status === 'MAINTENANCE') acc.maintenance += 1;
+    }
+    return acc;
+  }, [drones]);
+
   return (
-    <div className="rounded-lg border border-border bg-surface p-5 shadow-card">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-text">Drone Fleet</h2>
-          <p className="text-xs text-muted">{drones.length} drones \u00B7 live telemetry</p>
-        </div>
-        <span className="inline-flex items-center rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success">
-          <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
-          Streaming
+    <div className="space-y-6">
+      <PageHero
+        title="Drone fleet"
+        subtitle="Live battery and location telemetry across all units."
+        icon={Plane}
+        trailing={
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
+            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+            Streaming
+          </span>
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat
+          label="In flight"
+          value={summary.delivering}
+          accent="gold"
+          icon={Plane}
+        />
+        <Stat label="Idle" value={summary.idle} accent="navy" icon={Power} />
+        <Stat
+          label="Charging"
+          value={summary.charging}
+          accent="navy"
+          icon={Battery}
+        />
+        <Stat
+          label="Maintenance"
+          value={summary.maintenance}
+          accent="danger"
+          icon={Wrench}
+        />
+      </div>
+
+      <Card padding="lg">
+        <SectionHeader
+          label="ACTIVE FLEET"
+          hint={`${drones.length} drones registered`}
+        />
+        {drones.length === 0 ? (
+          <EmptyState
+            icon={
+              <Plane
+                size={20}
+                color="#0B1C2C"
+                style={{ transform: 'rotate(45deg)' }}
+              />
+            }
+            title="No drones registered"
+            description="Run the seed script (npm run db:seed) to provision a fleet for testing."
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {drones.map((drone) => {
+              const status = DRONE_STATUS[drone.status] ?? DRONE_STATUS.IDLE;
+              const pct = Math.max(
+                0,
+                Math.min(100, Number(drone.batteryPct ?? 0)),
+              );
+              return (
+                <div
+                  key={drone.id}
+                  className="rounded-lg border border-border bg-bg p-4 transition-shadow hover:shadow-card"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Plane
+                          size={16}
+                          color="#C6A052"
+                          style={{ transform: 'rotate(45deg)' }}
+                        />
+                        <p className="font-bold text-text">{drone.code}</p>
+                      </div>
+                      <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted">
+                        <MapPin size={11} />
+                        {drone.currentLatitude ?? '—'},{' '}
+                        {drone.currentLongitude ?? '—'}
+                      </p>
+                    </div>
+                    <Badge label={status.label} tone={status.tone} size="sm" />
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-muted inline-flex items-center gap-1">
+                        <Battery size={11} color="#C6A052" /> Battery
+                      </span>
+                      <span className="font-semibold text-text">{pct}%</span>
+                    </div>
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-hairline">
+                      <div
+                        className={`h-full rounded-full transition-all ${batteryBarClass(pct)}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {drone.activeDeliveryId ? (
+                    <p className="mt-2 text-xs text-muted">
+                      Active delivery:{' '}
+                      <span className="font-mono text-text">
+                        {drone.activeDeliveryId.slice(0, 8)}
+                      </span>
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+interface StatProps {
+  label: string;
+  value: number;
+  accent: 'gold' | 'navy' | 'danger';
+  icon: typeof Plane;
+}
+
+function Stat({ label, value, accent, icon: Icon }: StatProps) {
+  const dotColor =
+    accent === 'gold' ? '#C6A052' : accent === 'danger' ? '#DC2626' : '#0B1C2C';
+  return (
+    <Card padding="md">
+      <div className="flex items-center gap-2">
+        <Icon size={14} color={dotColor} />
+        <span className="text-[11px] uppercase tracking-[0.16em] font-semibold text-subtle">
+          {label}
         </span>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {drones.map((drone) => {
-          const status = DRONE_STATUS[drone.status] ?? DRONE_STATUS.IDLE;
-          const pct = Math.max(0, Math.min(100, Number(drone.batteryPct ?? 0)));
-          return (
-            <div
-              key={drone.id}
-              className="rounded-lg border border-border bg-bg p-4 transition-shadow hover:shadow-card"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🚁</span>
-                    <p className="font-bold text-text">{drone.code}</p>
-                  </div>
-                  <p className="mt-1 text-xs text-muted">
-                    {drone.currentLatitude ?? '—'}, {drone.currentLongitude ?? '—'}
-                  </p>
-                </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.bg} ${status.text}`}
-                >
-                  {status.label}
-                </span>
-              </div>
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-muted">Battery</span>
-                  <span className="font-semibold text-text">{pct}%</span>
-                </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-hairline">
-                  <div
-                    className={`h-full rounded-full transition-all ${batteryColor(pct)}`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-              {drone.activeDeliveryId ? (
-                <p className="mt-2 text-xs text-muted">
-                  Active delivery: <span className="font-mono text-text">{drone.activeDeliveryId.slice(0, 8)}</span>
-                </p>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-      {drones.length === 0 ? (
-        <div className="py-10 text-center">
-          <p className="text-2xl">🚁</p>
-          <p className="mt-2 text-sm font-medium text-text">No drones registered</p>
-          <p className="mt-1 text-xs text-muted">Run the seed script to provision a fleet.</p>
-        </div>
-      ) : null}
-    </div>
+      <p className="mt-1.5 text-2xl font-bold text-text">{value}</p>
+    </Card>
   );
 }

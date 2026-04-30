@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Platform, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Platform,
+  Alert,
+} from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Screen, AppHeader, Card, Badge, Button, Loader } from '../ui';
 import { useRole } from '../auth/useRole';
@@ -21,7 +28,13 @@ interface SettingsRowProps {
   destructive?: boolean;
 }
 
-function SettingsRow({ icon, label, hint, onPress, destructive }: SettingsRowProps) {
+function SettingsRow({
+  icon,
+  label,
+  hint,
+  onPress,
+  destructive,
+}: SettingsRowProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -80,8 +93,11 @@ export default function AccountScreen() {
     clerkUser?.primaryEmailAddress?.emailAddress ??
     (DEV_AUTH_BYPASS ? 'dev@skyserve.local' : '\u2014');
   const displayName =
-    clerkUser?.fullName ?? clerkUser?.firstName ?? user?.email?.split('@')[0] ?? 'Restaurant owner';
-  const displayRole = role ? ROLE_LABELS[role] ?? role : 'Restaurant owner';
+    clerkUser?.fullName ??
+    clerkUser?.firstName ??
+    user?.email?.split('@')[0] ??
+    'Restaurant owner';
+  const displayRole = role ? (ROLE_LABELS[role] ?? role) : 'Restaurant owner';
   const restaurantCount = user?.restaurantIds?.length ?? 0;
 
   return (
@@ -119,7 +135,11 @@ export default function AccountScreen() {
               <View className="flex-row gap-2 mt-2">
                 <Badge label={displayRole} tone="primary" size="sm" />
                 {restaurantCount > 0 ? (
-                  <Badge label={`${restaurantCount} restaurant${restaurantCount > 1 ? 's' : ''}`} tone="gold" size="sm" />
+                  <Badge
+                    label={`${restaurantCount} restaurant${restaurantCount > 1 ? 's' : ''}`}
+                    tone="gold"
+                    size="sm"
+                  />
                 ) : null}
               </View>
             </View>
@@ -141,14 +161,26 @@ export default function AccountScreen() {
             </Text>
           </View>
           <View className="px-4">
-            <SettingsRow icon="\uD83D\uDD14" label="Notifications" hint="Push and email" />
-            <SettingsRow icon="\uD83D\uDCB3" label="Payouts" hint="Bank account & history" />
-            <SettingsRow icon="\uD83D\uDCC8" label="Reports" hint="Daily and weekly stats" />
+            <SettingsRow
+              icon="\uD83D\uDD14"
+              label="Notifications"
+              hint="Push and email"
+            />
+            <SettingsRow
+              icon="\uD83D\uDCB3"
+              label="Payouts"
+              hint="Bank account & history"
+            />
+            <SettingsRow
+              icon="\uD83D\uDCC8"
+              label="Reports"
+              hint="Daily and weekly stats"
+            />
             <SettingsRow icon="\uD83C\uDD98" label="Help & support" />
           </View>
         </Card>
 
-        {(looksLocalHost() || DEV_AUTH_BYPASS) ? (
+        {looksLocalHost() || DEV_AUTH_BYPASS ? (
           <Card className="mb-4 border-warning bg-warning-soft" padding="md">
             <Text
               className="text-warning text-xs mb-1"

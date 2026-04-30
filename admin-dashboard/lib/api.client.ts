@@ -1,8 +1,18 @@
 'use client';
 
-import type { Drone, Order, OrderStatus } from './types';
+import type {
+  AdminInsights,
+  AdminOverview,
+  CreateVendorPayload,
+  Drone,
+  Order,
+  OrderStatus,
+  Vendor,
+  VendorPerformance,
+} from './types';
 
-export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+export const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
 const DEV_BEARER = process.env.NEXT_PUBLIC_DEV_BEARER ?? 'dev-token';
 
 export type TokenGetter = () => Promise<string | null>;
@@ -34,5 +44,33 @@ export function fetchDrones() {
   return authedFetch<Drone[]>('/drones');
 }
 export function patchOrderStatus(id: string, status: OrderStatus) {
-  return authedFetch<Order>(`/orders/${id}/status/${status}`, { method: 'PATCH' });
+  return authedFetch<Order>(`/orders/${id}/status/${status}`, {
+    method: 'PATCH',
+  });
+}
+
+export function fetchAdminOverview() {
+  return authedFetch<AdminOverview>('/admin/overview');
+}
+export function fetchAdminInsights() {
+  return authedFetch<AdminInsights>('/admin/insights');
+}
+
+export function fetchVendors() {
+  return authedFetch<Vendor[]>('/restaurants');
+}
+export function createVendor(payload: CreateVendorPayload) {
+  return authedFetch<Vendor>('/restaurants', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+export function setVendorActive(id: string, isActive: boolean) {
+  return authedFetch<Vendor>(`/restaurants/${id}/active`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isActive }),
+  });
+}
+export function fetchVendorPerformance(id: string) {
+  return authedFetch<VendorPerformance>(`/restaurants/${id}/performance`);
 }

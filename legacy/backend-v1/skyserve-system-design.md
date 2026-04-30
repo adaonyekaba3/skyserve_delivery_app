@@ -129,23 +129,23 @@ These three state models are linked, but intentionally separated.
 
 ## 5. Domain Services and Responsibilities
 
-| Service | Responsibility | System of Record |
-|---|---|---|
-| Auth / Identity Service | User role mapping, token validation, session policy | Cognito + Aurora |
-| User Service | Customer profiles, addresses, saved locations | Aurora |
-| Restaurant Service | Restaurant onboarding, branches, operating hours, prep capacity | Aurora |
-| Catalog Service | Menus, items, modifiers, availability | Aurora |
-| Order Service | Order creation, lifecycle state machine, order history | Aurora |
-| Payment Service | Payment authorization, capture, refund, reconciliation status | Aurora |
-| Dispatch Service | Hub selection, drone assignment, mission request orchestration | Aurora + events |
-| Hub Service | Hub metadata, coverage zones, slot capacity, charging slots | Aurora |
-| Drone Fleet Service | Drone registry, health, availability, digital twin metadata | Aurora + IoT shadow |
-| Mission Service | Flight mission lifecycle, command issuance, acknowledgements | Aurora + events |
-| Telemetry Ingestion Service | Normalize telemetry from simulator and future real drones | Timestream + stream |
-| Tracking Service | Build live order tracking projection and ETA updates | Redis + events |
-| Notification Service | Push, SMS, email, in-app events | Aurora + external channels |
-| Admin Service | Operational controls, incident workflows, audit access | Aurora |
-| Reporting / Analytics | SLA, fleet utilization, hub throughput, incident analysis | S3 / Athena / BI |
+| Service                     | Responsibility                                                  | System of Record           |
+| --------------------------- | --------------------------------------------------------------- | -------------------------- |
+| Auth / Identity Service     | User role mapping, token validation, session policy             | Cognito + Aurora           |
+| User Service                | Customer profiles, addresses, saved locations                   | Aurora                     |
+| Restaurant Service          | Restaurant onboarding, branches, operating hours, prep capacity | Aurora                     |
+| Catalog Service             | Menus, items, modifiers, availability                           | Aurora                     |
+| Order Service               | Order creation, lifecycle state machine, order history          | Aurora                     |
+| Payment Service             | Payment authorization, capture, refund, reconciliation status   | Aurora                     |
+| Dispatch Service            | Hub selection, drone assignment, mission request orchestration  | Aurora + events            |
+| Hub Service                 | Hub metadata, coverage zones, slot capacity, charging slots     | Aurora                     |
+| Drone Fleet Service         | Drone registry, health, availability, digital twin metadata     | Aurora + IoT shadow        |
+| Mission Service             | Flight mission lifecycle, command issuance, acknowledgements    | Aurora + events            |
+| Telemetry Ingestion Service | Normalize telemetry from simulator and future real drones       | Timestream + stream        |
+| Tracking Service            | Build live order tracking projection and ETA updates            | Redis + events             |
+| Notification Service        | Push, SMS, email, in-app events                                 | Aurora + external channels |
+| Admin Service               | Operational controls, incident workflows, audit access          | Aurora                     |
+| Reporting / Analytics       | SLA, fleet utilization, hub throughput, incident analysis       | S3 / Athena / BI           |
 
 ## 6. State Model
 
@@ -188,21 +188,21 @@ API boundaries are intentionally separated by actor and trust level.
 
 ### 7.1 External Boundaries
 
-| Boundary | Clients | Protocol | Auth | Owner | Notes |
-|---|---|---|---|---|---|
-| Consumer API | Mobile apps | HTTPS REST | Cognito JWT | API Gateway + domain services | Public internet-facing |
-| Restaurant Partner API | Restaurant app / tablet | HTTPS REST | Cognito JWT + partner role | API Gateway + domain services | Separate rate limits and scopes |
-| Admin API | Dashboard | HTTPS REST | Cognito JWT + admin role | API Gateway + admin services | Restricted by WAF and RBAC |
-| Realtime Tracking API | Consumer, restaurant, admin clients | WebSocket | Cognito JWT / signed token | API Gateway WS + Tracking Service | Push status and position updates |
-| Drone Device API | Simulated drones, future real drones | MQTT over TLS / HTTPS fallback | IoT certificates / IoT policies | AWS IoT Core | Device-specific trust boundary |
+| Boundary               | Clients                              | Protocol                       | Auth                            | Owner                             | Notes                            |
+| ---------------------- | ------------------------------------ | ------------------------------ | ------------------------------- | --------------------------------- | -------------------------------- |
+| Consumer API           | Mobile apps                          | HTTPS REST                     | Cognito JWT                     | API Gateway + domain services     | Public internet-facing           |
+| Restaurant Partner API | Restaurant app / tablet              | HTTPS REST                     | Cognito JWT + partner role      | API Gateway + domain services     | Separate rate limits and scopes  |
+| Admin API              | Dashboard                            | HTTPS REST                     | Cognito JWT + admin role        | API Gateway + admin services      | Restricted by WAF and RBAC       |
+| Realtime Tracking API  | Consumer, restaurant, admin clients  | WebSocket                      | Cognito JWT / signed token      | API Gateway WS + Tracking Service | Push status and position updates |
+| Drone Device API       | Simulated drones, future real drones | MQTT over TLS / HTTPS fallback | IoT certificates / IoT policies | AWS IoT Core                      | Device-specific trust boundary   |
 
 ### 7.2 Internal Boundaries
 
-| Boundary | Clients | Protocol | Auth | Owner | Notes |
-|---|---|---|---|---|---|
-| Service-to-service APIs | Internal services | REST/gRPC | IAM / mTLS / private network | ECS services | Used for synchronous domain calls |
-| Event backbone | Internal services | Kafka protocol | IAM/SASL per service | MSK | Used for async workflows |
-| Data stores | Internal services only | Native DB protocol | SG + IAM + secrets | Aurora / ElastiCache / Timestream | Never internet-facing |
+| Boundary                | Clients                | Protocol           | Auth                         | Owner                             | Notes                             |
+| ----------------------- | ---------------------- | ------------------ | ---------------------------- | --------------------------------- | --------------------------------- |
+| Service-to-service APIs | Internal services      | REST/gRPC          | IAM / mTLS / private network | ECS services                      | Used for synchronous domain calls |
+| Event backbone          | Internal services      | Kafka protocol     | IAM/SASL per service         | MSK                               | Used for async workflows          |
+| Data stores             | Internal services only | Native DB protocol | SG + IAM + secrets           | Aurora / ElastiCache / Timestream | Never internet-facing             |
 
 ### 7.3 Public API Surface
 
@@ -612,27 +612,27 @@ Rules:
 
 ### 9.3 Domain Event Topics
 
-| Topic | Producer | Consumers | Purpose |
-|---|---|---|---|
-| `order.created.v1` | Order Service | Payment, Dispatch, Notifications, Analytics | New order placed |
-| `order.accepted.v1` | Order Service | Tracking, Notifications, Analytics | Restaurant accepted order |
-| `order.preparing.v1` | Order Service | Tracking, Notifications | Prep started |
-| `order.handoff_ready.v1` | Order Service | Dispatch, Mission | Ready for drone pickup |
-| `order.picked_up.v1` | Order Service | Tracking, Notifications | Order loaded onto drone |
-| `order.in_flight.v1` | Order Service | Tracking, Notifications, Admin | Flight started |
-| `order.delivered.v1` | Order Service | Payment, Notifications, Analytics | Delivery completed |
-| `order.cancelled.v1` | Order Service | Payment, Notifications, Analytics | Order cancelled |
-| `dispatch.assignment.requested.v1` | Dispatch Service | Mission, Hub Ops | Match order to hub and drone |
-| `dispatch.assignment.confirmed.v1` | Dispatch Service | Order, Mission, Tracking | Hub and drone assigned |
-| `mission.created.v1` | Mission Service | Fleet, Tracking, Admin | Mission record created |
-| `mission.commanded.v1` | Mission Service | Fleet, Admin | Command issued to drone |
-| `mission.status.changed.v1` | Mission Service | Order, Tracking, Admin | Mission lifecycle transition |
-| `drone.telemetry.v1` | Telemetry Ingestion | Tracking, Admin, Analytics | Normalized position stream |
-| `drone.status.changed.v1` | Fleet Service | Admin, Dispatch | Availability or health change |
-| `drone.low_battery.v1` | Fleet Service | Dispatch, Admin, Mission | Battery exception |
-| `tracking.position.updated.v1` | Tracking Service | WebSocket gateway, Analytics | Updated live position |
-| `tracking.eta.updated.v1` | Tracking Service | WebSocket gateway, Notifications | Updated ETA |
-| `incident.created.v1` | Admin Service | Notifications, Analytics | Operations incident created |
+| Topic                              | Producer            | Consumers                                   | Purpose                       |
+| ---------------------------------- | ------------------- | ------------------------------------------- | ----------------------------- |
+| `order.created.v1`                 | Order Service       | Payment, Dispatch, Notifications, Analytics | New order placed              |
+| `order.accepted.v1`                | Order Service       | Tracking, Notifications, Analytics          | Restaurant accepted order     |
+| `order.preparing.v1`               | Order Service       | Tracking, Notifications                     | Prep started                  |
+| `order.handoff_ready.v1`           | Order Service       | Dispatch, Mission                           | Ready for drone pickup        |
+| `order.picked_up.v1`               | Order Service       | Tracking, Notifications                     | Order loaded onto drone       |
+| `order.in_flight.v1`               | Order Service       | Tracking, Notifications, Admin              | Flight started                |
+| `order.delivered.v1`               | Order Service       | Payment, Notifications, Analytics           | Delivery completed            |
+| `order.cancelled.v1`               | Order Service       | Payment, Notifications, Analytics           | Order cancelled               |
+| `dispatch.assignment.requested.v1` | Dispatch Service    | Mission, Hub Ops                            | Match order to hub and drone  |
+| `dispatch.assignment.confirmed.v1` | Dispatch Service    | Order, Mission, Tracking                    | Hub and drone assigned        |
+| `mission.created.v1`               | Mission Service     | Fleet, Tracking, Admin                      | Mission record created        |
+| `mission.commanded.v1`             | Mission Service     | Fleet, Admin                                | Command issued to drone       |
+| `mission.status.changed.v1`        | Mission Service     | Order, Tracking, Admin                      | Mission lifecycle transition  |
+| `drone.telemetry.v1`               | Telemetry Ingestion | Tracking, Admin, Analytics                  | Normalized position stream    |
+| `drone.status.changed.v1`          | Fleet Service       | Admin, Dispatch                             | Availability or health change |
+| `drone.low_battery.v1`             | Fleet Service       | Dispatch, Admin, Mission                    | Battery exception             |
+| `tracking.position.updated.v1`     | Tracking Service    | WebSocket gateway, Analytics                | Updated live position         |
+| `tracking.eta.updated.v1`          | Tracking Service    | WebSocket gateway, Notifications            | Updated ETA                   |
+| `incident.created.v1`              | Admin Service       | Notifications, Analytics                    | Operations incident created   |
 
 ### 9.4 Sample Payloads
 
@@ -772,7 +772,7 @@ Topic:
   "issued_at": "2026-04-13T13:28:55Z",
   "desired_state": "takeoff",
   "waypoints": [
-    { "seq": 1, "lat": 6.452000, "lng": 3.392000, "altitude_m": 45.0 },
+    { "seq": 1, "lat": 6.452, "lng": 3.392, "altitude_m": 45.0 },
     { "seq": 2, "lat": 6.465422, "lng": 3.406448, "altitude_m": 64.0 }
   ]
 }
@@ -822,25 +822,25 @@ Dispatch prioritizes:
 
 ### 11.1 Recommended AWS Services
 
-| Concern | AWS Service | Why |
-|---|---|---|
-| DNS | Route 53 | Managed DNS and health-aware routing |
-| CDN / edge | CloudFront | Low-latency delivery for dashboard assets and API edge presence |
-| Web protection | AWS WAF | Rate limiting, bot filtering, request filtering |
-| Identity | Amazon Cognito | Managed user pools and JWT issuance for apps |
-| Public API ingress | Amazon API Gateway HTTP APIs | API management, auth, throttling, versioning |
-| Realtime push | Amazon API Gateway WebSocket APIs | Bidirectional client updates |
-| Device connectivity | AWS IoT Core | MQTT over TLS, device identity, topic policies |
-| Device digital twin | AWS IoT Device Shadow | Desired and reported drone state |
-| Compute | Amazon ECS on Fargate | Lower ops burden for containerized services |
-| Streaming backbone | Amazon MSK | Durable event streaming for domain workflows |
-| Transaction DB | Aurora PostgreSQL | ACID relational core + PostGIS support |
-| Cache / live projection | ElastiCache | Sub-millisecond hot reads for tracking |
-| Time-series telemetry | Amazon Timestream | Managed storage for telemetry workloads |
-| Object storage | Amazon S3 | Archival, analytics, incident evidence |
-| Secrets | AWS Secrets Manager | Secret storage and rotation |
-| Monitoring | Amazon CloudWatch | Metrics, logs, alarms, dashboards |
-| Tracing | AWS Distro for OpenTelemetry / X-Ray compatible pipeline | Service traces and latency diagnosis |
+| Concern                 | AWS Service                                              | Why                                                             |
+| ----------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
+| DNS                     | Route 53                                                 | Managed DNS and health-aware routing                            |
+| CDN / edge              | CloudFront                                               | Low-latency delivery for dashboard assets and API edge presence |
+| Web protection          | AWS WAF                                                  | Rate limiting, bot filtering, request filtering                 |
+| Identity                | Amazon Cognito                                           | Managed user pools and JWT issuance for apps                    |
+| Public API ingress      | Amazon API Gateway HTTP APIs                             | API management, auth, throttling, versioning                    |
+| Realtime push           | Amazon API Gateway WebSocket APIs                        | Bidirectional client updates                                    |
+| Device connectivity     | AWS IoT Core                                             | MQTT over TLS, device identity, topic policies                  |
+| Device digital twin     | AWS IoT Device Shadow                                    | Desired and reported drone state                                |
+| Compute                 | Amazon ECS on Fargate                                    | Lower ops burden for containerized services                     |
+| Streaming backbone      | Amazon MSK                                               | Durable event streaming for domain workflows                    |
+| Transaction DB          | Aurora PostgreSQL                                        | ACID relational core + PostGIS support                          |
+| Cache / live projection | ElastiCache                                              | Sub-millisecond hot reads for tracking                          |
+| Time-series telemetry   | Amazon Timestream                                        | Managed storage for telemetry workloads                         |
+| Object storage          | Amazon S3                                                | Archival, analytics, incident evidence                          |
+| Secrets                 | AWS Secrets Manager                                      | Secret storage and rotation                                     |
+| Monitoring              | Amazon CloudWatch                                        | Metrics, logs, alarms, dashboards                               |
+| Tracing                 | AWS Distro for OpenTelemetry / X-Ray compatible pipeline | Service traces and latency diagnosis                            |
 
 ### 11.2 AWS Topology
 

@@ -1,7 +1,23 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, Platform, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Platform,
+  Alert,
+} from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { Screen, AppHeader, Card, Badge, Button, Loader, Icon, type IconName } from '../ui';
+import {
+  Screen,
+  AppHeader,
+  Card,
+  Badge,
+  Button,
+  Loader,
+  Icon,
+  type IconName,
+} from '../ui';
 import { useRole } from '../auth/useRole';
 import { useOrders } from '../store/orders';
 
@@ -22,7 +38,13 @@ interface SettingsRowProps {
   destructive?: boolean;
 }
 
-function SettingsRow({ icon, label, hint, onPress, destructive }: SettingsRowProps) {
+function SettingsRow({
+  icon,
+  label,
+  hint,
+  onPress,
+  destructive,
+}: SettingsRowProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -127,7 +149,7 @@ export default function AccountScreen() {
     clerkUser?.firstName ??
     user?.email?.split('@')[0] ??
     'SkyServe member';
-  const displayRole = role ? ROLE_LABELS[role] ?? role : 'Customer';
+  const displayRole = role ? (ROLE_LABELS[role] ?? role) : 'Customer';
 
   return (
     <Screen edges={['top', 'left', 'right']} scroll={false}>
@@ -175,8 +197,16 @@ export default function AccountScreen() {
 
         <Card className="mb-4" padding="lg">
           <View className="flex-row gap-4">
-            <Metric icon="file-text" label="Orders" value={String(totalOrders)} />
-            <Metric icon="navigation" label="Drone runs" value={String(droneDeliveries)} />
+            <Metric
+              icon="file-text"
+              label="Orders"
+              value={String(totalOrders)}
+            />
+            <Metric
+              icon="navigation"
+              label="Drone runs"
+              value={String(droneDeliveries)}
+            />
             <Metric icon="clock" label="Member" value={memberSince} />
           </View>
         </Card>

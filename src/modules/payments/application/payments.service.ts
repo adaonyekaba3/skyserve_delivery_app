@@ -14,7 +14,10 @@ import { OrdersService } from 'src/modules/orders/application/orders.service';
 
 @Injectable()
 export class PaymentsService {
-  private readonly providerMap: Record<PaymentProviderName, PaymentProviderPort>;
+  private readonly providerMap: Record<
+    PaymentProviderName,
+    PaymentProviderPort
+  >;
 
   constructor(
     private readonly drizzleService: DrizzleService,
@@ -102,7 +105,10 @@ export class PaymentsService {
       .where(eq(payments.providerRef, input.providerRef))
       .returning();
 
-    if (updated && (verified.status === 'AUTHORIZED' || verified.status === 'CAPTURED')) {
+    if (
+      updated &&
+      (verified.status === 'AUTHORIZED' || verified.status === 'CAPTURED')
+    ) {
       try {
         await this.ordersService.updateStatus(updated.orderId, 'ACCEPTED');
       } catch {

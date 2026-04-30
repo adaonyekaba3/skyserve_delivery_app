@@ -15,7 +15,10 @@ export function useOrderUpdates(userDbId: string | null) {
 
     const handler = (payload: Order) => {
       upsert(payload);
-      void notifyOrderUpdate('Order update', `Order #${payload.id.slice(0, 8)} is now ${payload.status}`);
+      void notifyOrderUpdate(
+        'Order update',
+        `Order #${payload.id.slice(0, 8)} is now ${payload.status}`,
+      );
     };
     channel.bind('order_status_updated', handler);
     channel.bind('order_created', handler);
@@ -27,11 +30,21 @@ export function useOrderUpdates(userDbId: string | null) {
   }, [userDbId, upsert]);
 }
 
-export function useDroneTelemetry(onUpdate: (payload: { code: string; currentLatitude?: string | null; currentLongitude?: string | null }) => void) {
+export function useDroneTelemetry(
+  onUpdate: (payload: {
+    code: string;
+    currentLatitude?: string | null;
+    currentLongitude?: string | null;
+  }) => void,
+) {
   useEffect(() => {
     const channel = subscribe('drones');
     if (!channel) return undefined;
-    const handler = (payload: { code: string; currentLatitude?: string | null; currentLongitude?: string | null }) => {
+    const handler = (payload: {
+      code: string;
+      currentLatitude?: string | null;
+      currentLongitude?: string | null;
+    }) => {
       onUpdate(payload);
     };
     channel.bind('drone_location_updated', handler);

@@ -20,7 +20,9 @@ export function EmptyState({
   className = '',
 }: EmptyStateProps) {
   return (
-    <View className={`flex-1 items-center justify-center px-8 py-12 ${className}`}>
+    <View
+      className={`flex-1 items-center justify-center px-8 py-12 ${className}`}
+    >
       <View className="h-16 w-16 rounded-full bg-primary-soft items-center justify-center mb-4">
         <Text className="text-3xl">{icon}</Text>
       </View>
@@ -40,7 +42,12 @@ export function EmptyState({
       ) : null}
       {ctaLabel && onCta ? (
         <View className="mt-6 w-full max-w-[240px]">
-          <Button label={ctaLabel} onPress={onCta} variant="primary" fullWidth />
+          <Button
+            label={ctaLabel}
+            onPress={onCta}
+            variant="primary"
+            fullWidth
+          />
         </View>
       ) : null}
     </View>

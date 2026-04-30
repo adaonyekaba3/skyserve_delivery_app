@@ -1,11 +1,29 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RestaurantsRepository } from '../restaurants.repository';
 import { Role } from 'src/shared/types/role.enum';
 import { AuthenticatedUser } from 'src/shared/types/authenticated-user';
+import { PusherService } from 'src/shared/realtime/pusher.service';
+
+interface VendorInput {
+  name: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  category?: string | null;
+  location?: string | null;
+  isActive?: boolean;
+}
 
 @Injectable()
 export class RestaurantsService {
-  constructor(private readonly restaurantsRepository: RestaurantsRepository) {}
+  constructor(
+    private readonly restaurantsRepository: RestaurantsRepository,
+    private readonly pusherService: PusherService,
+  ) {}
 
   list() {
     return this.restaurantsRepository.list();
@@ -27,21 +45,25 @@ export class RestaurantsService {
     if (user.role === Role.ADMIN || user.role === Role.OPERATIONS) {
       return true;
     }
-    if (user.role === Role.RESTAURANT_OWNER && user.restaurantIds.includes(restaurantId)) {
+    if (
+      user.role === Role.RESTAURANT_OWNER &&
+      user.restaurantIds.includes(restaurantId)
+    ) {
       return true;
     }
     return false;
   }
 
-  async createRestaurant(
-    user: AuthenticatedUser,
-    input: { name: string; address: string; latitude: string; longitude: string },
-  ) {
+  async createRestaurant(user: AuthenticatedUser, input: VendorInput) {
     const ownerId =
       user.role === Role.RESTAURANT_OWNER ? user.dbUserId : user.dbUserId;
     const [created] = await this.restaurantsRepository.createRestaurant({
       ownerId,
       ...input,
+    });
+    await this.pusherService.trigger('private-admin', 'vendor_updated', {
+      type: 'created',
+      restaurant: created,
     });
     return created;
   }
@@ -49,16 +71,49 @@ export class RestaurantsService {
   async updateRestaurant(
     user: AuthenticatedUser,
     id: string,
-    input: Partial<{ name: string; address: string; latitude: string; longitude: string }>,
+    input: Partial<VendorInput>,
   ) {
     if (!this.canManageRestaurant(user, id)) {
       throw new ForbiddenException('You do not own this restaurant');
     }
-    const [updated] = await this.restaurantsRepository.updateRestaurant(id, input);
+    const [updated] = await this.restaurantsRepository.updateRestaurant(
+      id,
+      input,
+    );
     if (!updated) {
       throw new NotFoundException(`Restaurant ${id} not found`);
     }
+    await this.pusherService.trigger('private-admin', 'vendor_updated', {
+      type: 'updated',
+      restaurant: updated,
+    });
     return updated;
+  }
+
+  async setActive(user: AuthenticatedUser, id: string, isActive: boolean) {
+    if (!this.canManageRestaurant(user, id)) {
+      throw new ForbiddenException('You do not own this restaurant');
+    }
+    const [updated] = await this.restaurantsRepository.setActive(id, isActive);
+    if (!updated) {
+      throw new NotFoundException(`Restaurant ${id} not found`);
+    }
+    await this.pusherService.trigger('private-admin', 'vendor_updated', {
+      type: 'active_changed',
+      restaurant: updated,
+    });
+    return updated;
+  }
+
+  async getPerformance(user: AuthenticatedUser, id: string) {
+    if (!this.canManageRestaurant(user, id)) {
+      throw new ForbiddenException('You do not own this restaurant');
+    }
+    const exists = await this.restaurantsRepository.findById(id);
+    if (!exists.length) {
+      throw new NotFoundException(`Restaurant ${id} not found`);
+    }
+    return this.restaurantsRepository.performance(id);
   }
 
   async deleteRestaurant(user: AuthenticatedUser, id: string) {
@@ -108,7 +163,10 @@ export class RestaurantsService {
     if (!this.canManageRestaurant(user, existing[0].restaurantId)) {
       throw new ForbiddenException('You do not own this restaurant');
     }
-    const [updated] = await this.restaurantsRepository.updateMenuItem(id, input);
+    const [updated] = await this.restaurantsRepository.updateMenuItem(
+      id,
+      input,
+    );
     return updated;
   }
 

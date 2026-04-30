@@ -1,4 +1,6 @@
-const baseUrl = (process.env.API_BASE_URL ?? 'http://127.0.0.1:3000/api/v1').replace(/\/$/, '');
+const baseUrl = (
+  process.env.API_BASE_URL ?? 'http://127.0.0.1:3000/api/v1'
+).replace(/\/$/, '');
 const adminEmail = process.env.SEED_ADMIN_EMAIL ?? 'admin@skyserve.local';
 const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin12345!';
 

@@ -6,7 +6,11 @@ import { BaseRepository } from 'src/shared/database/base.repository';
 @Injectable()
 export class OrdersRepository extends BaseRepository {
   findRecent(limit = 50) {
-    return this.db.select().from(orders).orderBy(desc(orders.createdAt)).limit(limit);
+    return this.db
+      .select()
+      .from(orders)
+      .orderBy(desc(orders.createdAt))
+      .limit(limit);
   }
 
   findById(id: string) {
@@ -32,6 +36,9 @@ export class OrdersRepository extends BaseRepository {
   }
 
   findItems(orderId: string) {
-    return this.db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+    return this.db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
   }
 }

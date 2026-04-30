@@ -122,7 +122,11 @@ export default function OrderDetailScreen({ route, navigation }: Props) {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title={`#${order.id.slice(0, 8)}`} subtitle={STATUS_HEADLINE[status]} showBack />
+      <AppHeader
+        title={`#${order.id.slice(0, 8)}`}
+        subtitle={STATUS_HEADLINE[status]}
+        showBack
+      />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
@@ -140,7 +144,8 @@ export default function OrderDetailScreen({ route, navigation }: Props) {
             className="text-white/80 text-sm mt-1"
             style={{ fontFamily: 'Inter_400Regular' }}
           >
-            Total {'\u20A6'}{Number(order.totalAmount).toLocaleString()}
+            Total {'\u20A6'}
+            {Number(order.totalAmount).toLocaleString()}
           </Text>
         </Card>
 
@@ -180,7 +185,8 @@ export default function OrderDetailScreen({ route, navigation }: Props) {
                   className="text-muted text-sm"
                   style={{ fontFamily: 'Inter_500Medium' }}
                 >
-                  {'\u20A6'}{(Number(item.unitPrice) * item.quantity).toLocaleString()}
+                  {'\u20A6'}
+                  {(Number(item.unitPrice) * item.quantity).toLocaleString()}
                 </Text>
               </View>
             ))}
@@ -220,7 +226,10 @@ export default function OrderDetailScreen({ route, navigation }: Props) {
 
         {error ? (
           <View className="bg-danger-soft rounded-md mt-2 px-3 py-2.5">
-            <Text className="text-danger text-sm" style={{ fontFamily: 'Inter_500Medium' }}>
+            <Text
+              className="text-danger text-sm"
+              style={{ fontFamily: 'Inter_500Medium' }}
+            >
               {error}
             </Text>
           </View>

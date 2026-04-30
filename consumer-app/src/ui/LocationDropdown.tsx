@@ -77,12 +77,16 @@ export function LocationDropdown({
                   <Text
                     className={`text-base ${active ? 'text-primary' : 'text-text'}`}
                     style={{
-                      fontFamily: active ? 'Inter_600SemiBold' : 'Inter_400Regular',
+                      fontFamily: active
+                        ? 'Inter_600SemiBold'
+                        : 'Inter_400Regular',
                     }}
                   >
                     {opt}
                   </Text>
-                  {active ? <Icon name="check" size={16} color="#0B1C2C" /> : null}
+                  {active ? (
+                    <Icon name="check" size={16} color="#0B1C2C" />
+                  ) : null}
                 </Pressable>
               );
             })}

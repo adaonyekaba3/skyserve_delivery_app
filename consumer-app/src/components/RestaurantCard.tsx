@@ -123,7 +123,12 @@ export default function RestaurantCard({
               Open now
             </Text>
           </View>
-          <Button label="View menu" size="sm" variant="secondary" onPress={onPress} />
+          <Button
+            label="View menu"
+            size="sm"
+            variant="secondary"
+            onPress={onPress}
+          />
         </View>
       </View>
     </Card>

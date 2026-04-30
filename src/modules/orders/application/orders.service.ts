@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { eq, inArray } from 'drizzle-orm';
 import { menuItems, orderItems, orders } from '../../../../drizzle/schema';
 import { DrizzleService } from 'src/shared/database/drizzle.service';
@@ -70,10 +74,14 @@ export class OrdersService {
     const linePayloads = input.items.map((line) => {
       const menu = byId.get(line.menuItemId);
       if (!menu) {
-        throw new BadRequestException(`Menu item not found: ${line.menuItemId}`);
+        throw new BadRequestException(
+          `Menu item not found: ${line.menuItemId}`,
+        );
       }
       if (menu.restaurantId !== input.restaurantId) {
-        throw new BadRequestException(`Menu item ${menu.id} does not belong to restaurant ${input.restaurantId}`);
+        throw new BadRequestException(
+          `Menu item ${menu.id} does not belong to restaurant ${input.restaurantId}`,
+        );
       }
       const unitPrice = Number(menu.price);
       total += unitPrice * line.quantity;
@@ -115,9 +123,21 @@ export class OrdersService {
     const payload = { ...created, items };
 
     await Promise.all([
-      this.pusherService.trigger(`private-restaurant-${created.restaurantId}`, 'order_created', payload),
-      this.pusherService.trigger(`private-customer-${created.customerId}`, 'order_status_updated', payload),
+      this.pusherService.trigger(
+        `private-restaurant-${created.restaurantId}`,
+        'order_created',
+        payload,
+      ),
+      this.pusherService.trigger(
+        `private-customer-${created.customerId}`,
+        'order_status_updated',
+        payload,
+      ),
       this.pusherService.trigger('orders', 'order_status_updated', payload),
+      this.pusherService.trigger('private-admin', 'order_changed', {
+        type: 'created',
+        order: payload,
+      }),
     ]);
 
     return payload;
@@ -125,7 +145,9 @@ export class OrdersService {
 
   async updateStatus(
     orderId: string,
-    nextStatus: Parameters<LogisticsWorkflowService['updateOrderStatus']>[0]['nextStatus'],
+    nextStatus: Parameters<
+      LogisticsWorkflowService['updateOrderStatus']
+    >[0]['nextStatus'],
     actorUserId?: string,
   ) {
     const updated = await this.logisticsWorkflowService.updateOrderStatus({
@@ -139,9 +161,21 @@ export class OrdersService {
     }
 
     await Promise.all([
-      this.pusherService.trigger(`private-customer-${updated.customerId}`, 'order_status_updated', updated),
-      this.pusherService.trigger(`private-restaurant-${updated.restaurantId}`, 'order_status_updated', updated),
+      this.pusherService.trigger(
+        `private-customer-${updated.customerId}`,
+        'order_status_updated',
+        updated,
+      ),
+      this.pusherService.trigger(
+        `private-restaurant-${updated.restaurantId}`,
+        'order_status_updated',
+        updated,
+      ),
       this.pusherService.trigger('orders', 'order_status_updated', updated),
+      this.pusherService.trigger('private-admin', 'order_changed', {
+        type: 'status_updated',
+        order: updated,
+      }),
     ]);
 
     return updated;

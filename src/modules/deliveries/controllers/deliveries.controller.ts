@@ -14,7 +14,13 @@ export class DeliveriesController {
   updateStatus(
     @Param('id') id: string,
     @Param('status')
-    status: 'ASSIGNED' | 'PICKED_UP' | 'IN_FLIGHT' | 'DELIVERED' | 'FAILED' | 'CANCELLED',
+    status:
+      | 'ASSIGNED'
+      | 'PICKED_UP'
+      | 'IN_FLIGHT'
+      | 'DELIVERED'
+      | 'FAILED'
+      | 'CANCELLED',
     @Query('latitude') latitude?: string,
     @Query('longitude') longitude?: string,
     @Query('etaMinutes') etaMinutes?: string,

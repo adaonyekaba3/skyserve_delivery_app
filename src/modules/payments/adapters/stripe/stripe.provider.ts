@@ -10,7 +10,9 @@ import {
 export class StripeProvider implements PaymentProviderPort {
   readonly name = 'STRIPE' as const;
 
-  async initialize(input: InitializePaymentInput): Promise<InitializePaymentResult> {
+  async initialize(
+    input: InitializePaymentInput,
+  ): Promise<InitializePaymentResult> {
     return {
       providerRef: `stp_${input.orderId}`,
       authorizationUrl: `${input.callbackUrl}?provider=stripe`,
